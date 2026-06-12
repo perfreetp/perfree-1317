@@ -1,13 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { userInfo, patrolRecords, monthlyStats } from '@/data/stats';
+import { userInfo, monthlyStats } from '@/data/stats';
+import { usePatrolRecordStore } from '@/stores/usePatrolRecordStore';
+import { PatrolRecord } from '@/types';
 
 const StatsPage: React.FC = () => {
+  const { initRecords, records, getRecordsByDateRange } = usePatrolRecordStore();
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showExportPreview, setShowExportPreview] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [exportData, setExportData] = useState<{
+    records: PatrolRecord[];
+    totalDistance: number;
+    totalCheckpoints: number;
+    range: string;
+  } | null>(null);
+
+  useEffect(() => {
+    initRecords();
+  }, [initRecords]);
+
+  useDidShow(() => {
+    initRecords();
+  });
 
   const formatDateStr = (date: Date) => {
     const year = date.getFullYear();
@@ -27,20 +46,30 @@ const StatsPage: React.FC = () => {
   };
 
   const handleExport = () => {
-    console.log('[Stats] 导出记录');
     Taro.showActionSheet({
       itemList: ['导出本周记录', '导出本月记录', '按日期范围导出'],
       success: (res) => {
-        console.log('[Stats] 选择导出类型', res.tapIndex);
         if (res.tapIndex === 2) {
           openDatePicker();
         } else {
-          const rangeText = res.tapIndex === 0 ? '本周' : '本月';
-          doExport(rangeText);
+          const defaults = getDefaultDates();
+          let start = defaults.start;
+          let end = defaults.end;
+
+          if (res.tapIndex === 0) {
+            const d = new Date();
+            d.setDate(d.getDate() - 7);
+            start = formatDateStr(d);
+            end = defaults.end;
+          } else if (res.tapIndex === 1) {
+            const d = new Date();
+            d.setDate(1);
+            start = formatDateStr(d);
+            end = defaults.end;
+          }
+
+          prepareExportPreview(start, end);
         }
-      },
-      fail: (err) => {
-        console.error('[Stats] 导出取消', err);
       },
     });
   };
@@ -52,21 +81,7 @@ const StatsPage: React.FC = () => {
     setShowDatePicker(true);
   };
 
-  const handleStartDateChange = (e: any) => {
-    setStartDate(e.detail.value);
-  };
-
-  const handleEndDateChange = (e: any) => {
-    setEndDate(e.detail.value);
-  };
-
   const pickStartDate = () => {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const day = d.getDate().toString().padStart(2, '0');
-    const todayStr = `${year}-${month}-${day}`;
-
     Taro.showModal({
       title: '选择开始日期',
       content: `请输入开始日期（格式：YYYY-MM-DD）\n默认：${startDate}`,
@@ -108,23 +123,42 @@ const StatsPage: React.FC = () => {
     setShowDatePicker(false);
   };
 
-  const confirmExport = () => {
-    if (!startDate || !endDate) {
+  const prepareExportPreview = (start: string, end: string) => {
+    if (!start || !end) {
       Taro.showToast({ title: '请选择完整日期范围', icon: 'none' });
       return;
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
+    if (new Date(start) > new Date(end)) {
       Taro.showToast({ title: '开始日期不能晚于结束日期', icon: 'none' });
       return;
     }
 
+    initRecords();
+    const filteredRecords = getRecordsByDateRange(start, end);
+    const totalDistance = filteredRecords.reduce((sum, r) => sum + r.distance, 0);
+    const totalCheckpoints = filteredRecords.reduce((sum, r) => sum + r.checkpoints, 0);
+
+    setExportData({
+      records: filteredRecords,
+      totalDistance: Math.round(totalDistance * 10) / 10,
+      totalCheckpoints,
+      range: `${start} 至 ${end}`,
+    });
+
     setShowDatePicker(false);
-    doExport(`${startDate} 至 ${endDate}`);
+    setShowExportPreview(true);
   };
 
-  const doExport = (range: string) => {
-    console.log('[Stats] 开始导出', range);
+  const confirmDateRange = () => {
+    prepareExportPreview(startDate, endDate);
+  };
+
+  const doExport = () => {
+    if (!exportData) return;
+
+    console.log('[Stats] 开始导出', exportData.range, exportData.records.length, '条');
+    setShowExportPreview(false);
     Taro.showLoading({ title: '导出中...' });
 
     setTimeout(() => {
@@ -134,9 +168,22 @@ const StatsPage: React.FC = () => {
         icon: 'success',
         duration: 2000,
       });
-      console.log('[Stats] 导出完成', range);
+      console.log('[Stats] 导出完成', exportData.range);
     }, 1500);
   };
+
+  const cancelExportPreview = () => {
+    setShowExportPreview(false);
+    setExportData(null);
+  };
+
+  const handleRecordClick = (recordId: string) => {
+    Taro.navigateTo({ url: `/pages/record-detail/index?id=${recordId}` });
+  };
+
+  const sortedRecords = useMemo(() => {
+    return [...records].sort((a, b) => (a.date < b.date ? 1 : -1));
+  }, [records]);
 
   return (
     <ScrollView scrollY className={styles.page}>
@@ -203,34 +250,53 @@ const StatsPage: React.FC = () => {
           </View>
         </View>
         <View className={styles.recordList}>
-          {patrolRecords.map((record) => (
-            <View key={record.id} className={styles.recordItem}>
-              <View className={styles.recordTop}>
-                <Text className={styles.recordDate}>{record.date}</Text>
-                <View className={styles.recordStatus}>
-                  <Text>已完成</Text>
-                </View>
-              </View>
-              <View className={styles.recordBottom}>
-                <View className={styles.recordInfoItem}>
-                  <Text className={styles.recordInfoIcon}>📏</Text>
-                  <Text>{record.distance.toFixed(1)}公里</Text>
-                </View>
-                <View className={styles.recordInfoItem}>
-                  <Text className={styles.recordInfoIcon}>⏱️</Text>
-                  <Text>{record.duration}分钟</Text>
-                </View>
-                <View className={styles.recordInfoItem}>
-                  <Text className={styles.recordInfoIcon}>📍</Text>
-                  <Text>{record.checkpoints}个打卡点</Text>
-                </View>
-                <View className={styles.recordInfoItem}>
-                  <Text className={styles.recordInfoIcon}>🚷</Text>
-                  <Text>劝返{record.turnBack}人</Text>
-                </View>
-              </View>
+          {sortedRecords.length === 0 ? (
+            <View className={styles.emptyState}>
+              <Text className={styles.emptyIcon}>📋</Text>
+              <Text className={styles.emptyText}>暂无巡护记录</Text>
             </View>
-          ))}
+          ) : (
+            sortedRecords.map((record) => (
+              <View
+                key={record.id}
+                className={styles.recordItem}
+                onClick={() => handleRecordClick(record.id)}
+              >
+                <View className={styles.recordTop}>
+                  <View>
+                    <Text className={styles.recordDate}>{record.date}</Text>
+                    {record.taskName && (
+                      <Text className={styles.recordTaskName}>{record.taskName}</Text>
+                    )}
+                  </View>
+                  <View className={styles.recordStatus}>
+                    <Text>已完成</Text>
+                  </View>
+                </View>
+                <View className={styles.recordBottom}>
+                  <View className={styles.recordInfoItem}>
+                    <Text className={styles.recordInfoIcon}>📏</Text>
+                    <Text>{record.distance.toFixed(1)}公里</Text>
+                  </View>
+                  <View className={styles.recordInfoItem}>
+                    <Text className={styles.recordInfoIcon}>⏱️</Text>
+                    <Text>{record.duration}分钟</Text>
+                  </View>
+                  <View className={styles.recordInfoItem}>
+                    <Text className={styles.recordInfoIcon}>📍</Text>
+                    <Text>{record.checkpoints}个打卡点</Text>
+                  </View>
+                  <View className={styles.recordInfoItem}>
+                    <Text className={styles.recordInfoIcon}>⚠️</Text>
+                    <Text>{record.reports || 0}条上报</Text>
+                  </View>
+                </View>
+                <View className={styles.recordArrow}>
+                  <Text>›</Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
       </View>
 
@@ -263,7 +329,7 @@ const StatsPage: React.FC = () => {
 
             <View className={styles.datePickerHint}>
               <Text className={styles.datePickerHintText}>
-                选择日期范围后，将导出该时间段内的所有巡护记录
+                选择日期范围后，将预览该时间段内的导出数据
               </Text>
             </View>
 
@@ -271,7 +337,47 @@ const StatsPage: React.FC = () => {
               <View className={styles.datePickerCancel} onClick={cancelDatePicker}>
                 <Text>取消</Text>
               </View>
-              <View className={styles.datePickerConfirm} onClick={confirmExport}>
+              <View className={styles.datePickerConfirm} onClick={confirmDateRange}>
+                <Text>预览数据</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {showExportPreview && exportData && (
+        <View className={styles.datePickerOverlay}>
+          <View className={styles.datePickerContent}>
+            <Text className={styles.datePickerTitle}>导出数据预览</Text>
+
+            <Text className={styles.exportRangeText}>日期范围：{exportData.range}</Text>
+
+            <View className={styles.exportPreviewGrid}>
+              <View className={styles.exportPreviewItem}>
+                <Text className={styles.exportPreviewValue}>{exportData.records.length}</Text>
+                <Text className={styles.exportPreviewLabel}>记录条数</Text>
+              </View>
+              <View className={styles.exportPreviewItem}>
+                <Text className={styles.exportPreviewValue}>{exportData.totalDistance}</Text>
+                <Text className={styles.exportPreviewLabel}>总里程(公里)</Text>
+              </View>
+              <View className={styles.exportPreviewItem}>
+                <Text className={styles.exportPreviewValue}>{exportData.totalCheckpoints}</Text>
+                <Text className={styles.exportPreviewLabel}>总打卡数</Text>
+              </View>
+            </View>
+
+            <View className={styles.datePickerHint}>
+              <Text className={styles.datePickerHintText}>
+                确认后将导出以上 {exportData.records.length} 条巡护记录
+              </Text>
+            </View>
+
+            <View className={styles.datePickerActions}>
+              <View className={styles.datePickerCancel} onClick={cancelExportPreview}>
+                <Text>取消</Text>
+              </View>
+              <View className={styles.datePickerConfirm} onClick={doExport}>
                 <Text>确认导出</Text>
               </View>
             </View>

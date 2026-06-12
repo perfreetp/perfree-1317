@@ -21,6 +21,15 @@ export interface Checkpoint {
   lng: number;
   checked: boolean;
   checkedTime?: string;
+  checkedDate?: string;
+}
+
+export interface ReportProgressNode {
+  status: 'pending' | 'processing' | 'completed';
+  statusText: string;
+  time: string;
+  remark?: string;
+  operator?: string;
 }
 
 export interface ReportItem {
@@ -33,9 +42,11 @@ export interface ReportItem {
   location: string;
   lat: number;
   lng: number;
-  status: 'pending' | 'processing' | 'resolved';
+  status: 'pending' | 'processing' | 'completed';
   createTime: string;
   reporter: string;
+  progress?: ReportProgressNode[];
+  dutyRemark?: string;
 }
 
 export interface Contact {
@@ -50,14 +61,29 @@ export interface Contact {
   lastUpdate?: string;
 }
 
+export interface CheckpointRecord {
+  id: string;
+  name: string;
+  checked: boolean;
+  checkedTime?: string;
+  lat: number;
+  lng: number;
+}
+
 export interface PatrolRecord {
   id: string;
+  taskId?: string;
+  taskName?: string;
   date: string;
+  startTime?: string;
+  endTime?: string;
   distance: number;
   duration: number;
   checkpoints: number;
   reports: number;
   turnBack: number;
+  checkpointDetails?: CheckpointRecord[];
+  reportIds?: string[];
 }
 
 export interface Notice {

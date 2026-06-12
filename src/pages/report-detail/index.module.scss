@@ -6,12 +6,92 @@
   padding-bottom: 40rpx;
 }
 
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  padding: $spacing-xl $page-padding 80rpx;
+  color: $color-text-white;
+  text-align: center;
+  position: relative;
+
+  &.fire {
+    background: linear-gradient(135deg, #e54d42 0%, #b32424 100%);
+  }
+
+  &.poaching {
+    background: linear-gradient(135deg, #8b6914 0%, #5c450e 100%);
+  }
+
+  &.roadblock {
+    background: linear-gradient(135deg, #165dff 0%, #0e42d2 100%);
+  }
+
+  &.other {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  }
+}
+
+.typeIcon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto $spacing-md;
+  font-size: 48rpx;
+}
+
+.typeName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.reportNo {
+  font-size: $font-size-sm;
+  opacity: 0.85;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 8rpx 24rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &.pending {
+    background: rgba(255, 125, 0, 0.2);
+    color: #ffcc80;
+  }
+
+  &.processing {
+    background: rgba(22, 93, 255, 0.2);
+    color: #a8c0ff;
+  }
+
+  &.completed {
+    background: rgba(0, 180, 42, 0.2);
+    color: #86e29b;
+  }
+}
+
 .section {
   background: $color-bg-card;
   margin: $spacing-md $page-padding;
   border-radius: $radius-lg;
   padding: $spacing-lg;
   box-shadow: $shadow-card;
+
+  &:first-of-type {
+    margin-top: -40rpx;
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .sectionTitle {
@@ -21,67 +101,16 @@
   margin-bottom: $spacing-md;
 }
 
-.typeHeader {
+.infoCard {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.infoItem {
   display: flex;
-  align-items: center;
-  margin-bottom: $spacing-lg;
-}
-
-.typeIcon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: $radius-lg;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: $spacing-md;
-  font-size: 40rpx;
-  background: $color-primary-bg;
-}
-
-.typeInfo {
-  flex: 1;
-}
-
-.typeName {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  display: block;
-  margin-bottom: 4rpx;
-}
-
-.reportId {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  display: block;
-}
-
-.statusBadge {
-  padding: 6rpx 16rpx;
-  border-radius: $radius-sm;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-
-  &.pending {
-    background: $color-warning-bg;
-    color: $color-warning;
-  }
-
-  &.processing {
-    background: $color-primary-bg;
-    color: $color-primary;
-  }
-
-  &.resolved {
-    background: rgba($color-success, 0.1);
-    color: $color-success;
-  }
-}
-
-.infoRow {
-  display: flex;
-  padding: $spacing-sm 0;
+  align-items: flex-start;
+  padding: $spacing-md $spacing-lg;
   border-bottom: 1rpx solid $color-divider;
 
   &:last-child {
@@ -100,7 +129,12 @@
   flex: 1;
   font-size: $font-size-sm;
   color: $color-text-primary;
-  line-height: 1.6;
+}
+
+.descCard {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
 }
 
 .descText {
@@ -109,13 +143,13 @@
   line-height: 1.8;
 }
 
-.imageGrid {
+.photoGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: $spacing-sm;
 }
 
-.imageItem {
+.photoItem {
   position: relative;
   width: 100%;
   padding-bottom: 100%;
@@ -123,7 +157,7 @@
   overflow: hidden;
 }
 
-.imageImg {
+.photoImg {
   position: absolute;
   top: 0;
   left: 0;
@@ -131,17 +165,20 @@
   height: 100%;
 }
 
-.voiceBox {
-  display: flex;
-  align-items: center;
-  padding: $spacing-md;
+.voiceCard {
   background: $color-bg-page;
   border-radius: $radius-md;
+  padding: $spacing-lg;
 }
 
-.voicePlayBtn {
-  width: 64rpx;
-  height: 64rpx;
+.voicePlayer {
+  display: flex;
+  align-items: center;
+}
+
+.playBtn {
+  width: 72rpx;
+  height: 72rpx;
   border-radius: $radius-round;
   background: $color-primary;
   display: flex;
@@ -151,24 +188,15 @@
   color: $color-text-white;
   font-size: 28rpx;
   flex-shrink: 0;
-  transition: all $transition-base;
-
-  &:active {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
 }
 
-.voiceInfo {
+.waveform {
   flex: 1;
-}
-
-.voiceWave {
-  height: 40rpx;
+  height: 60rpx;
   display: flex;
   align-items: center;
   gap: 4rpx;
-  margin-bottom: 4rpx;
+  margin-right: $spacing-md;
 }
 
 .waveBar {
@@ -177,29 +205,20 @@
   border-radius: 2rpx;
 }
 
-.voiceDuration {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
+.duration {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
 }
 
 .timeline {
-  padding-left: $spacing-md;
+  padding-left: 16rpx;
   position: relative;
-}
-
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 10rpx;
-  top: 0;
-  bottom: 0;
-  width: 2rpx;
-  background: $color-border;
 }
 
 .timelineItem {
   position: relative;
-  padding: $spacing-md 0 $spacing-md $spacing-lg;
+  padding: $spacing-md 0 $spacing-md $spacing-xl;
 
   &:last-child {
     padding-bottom: 0;
@@ -208,14 +227,17 @@
 
 .timelineDot {
   position: absolute;
-  left: -2rpx;
-  top: $spacing-md + 8rpx;
-  width: 24rpx;
-  height: 24rpx;
+  left: 0;
+  top: $spacing-md + 6rpx;
+  width: 28rpx;
+  height: 28rpx;
   border-radius: $radius-round;
   background: $color-bg-card;
-  border: 4rpx solid $color-primary;
+  border: 4rpx solid $color-border;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &.done {
     background: $color-success;
@@ -228,9 +250,20 @@
   }
 }
 
+.dotCheck {
+  color: $color-text-white;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
 .timelineContent {
-  font-size: $font-size-sm;
+  position: relative;
+}
+
+.timelineText {
+  font-size: $font-size-md;
   color: $color-text-primary;
+  font-weight: $font-weight-medium;
   display: block;
   margin-bottom: 4rpx;
 }
@@ -239,6 +272,42 @@
   font-size: $font-size-xs;
   color: $color-text-tertiary;
   display: block;
+  margin-bottom: 4rpx;
+}
+
+.timelineRemark {
+  margin-top: $spacing-sm;
+  background: $color-primary-bg;
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+}
+
+.timelineRemarkText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.timelineLine {
+  position: absolute;
+  left: 12rpx;
+  top: $spacing-md * 2 + 6rpx;
+  bottom: $spacing-sm;
+  width: 2rpx;
+  background: $color-divider;
+}
+
+.dutyRemarkCard {
+  background: linear-gradient(135deg, rgba($color-primary, 0.08) 0%, rgba($color-primary, 0.04) 100%);
+  border-left: 6rpx solid $color-primary;
+  border-radius: $radius-sm;
+  padding: $spacing-md $spacing-lg;
+}
+
+.dutyRemarkText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: 1.8;
 }
 
 .bottomBar {
@@ -252,9 +321,10 @@
   box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
   display: flex;
   gap: $spacing-md;
+  z-index: 100;
 }
 
-.outlineBtn {
+.secondaryBtn {
   flex: 1;
   height: $button-height-lg;
   border: 2rpx solid $color-border;

@@ -166,12 +166,12 @@ const ReportPage: React.FC = () => {
               other: '其他隐患',
             };
 
-            addReport({
+            const newReport = addReport({
               type,
               typeName: typeNameMap[type],
               description,
               images,
-              voiceNote: hasVoice ? `${recordTime}秒语音描述` : undefined,
+              voiceNote: hasVoice ? formatVoiceTime(recordTime) : undefined,
               location,
               lat,
               lng,
@@ -179,11 +179,11 @@ const ReportPage: React.FC = () => {
 
             Taro.hideLoading();
             Taro.showToast({ title: '上报成功', icon: 'success' });
-            setDescription('');
-            setImages([]);
-            setHasVoice(false);
-            setRecordTime(0);
-            console.log('[Report] 上报提交成功');
+            console.log('[Report] 上报提交成功', newReport.id);
+
+            setTimeout(() => {
+              Taro.redirectTo({ url: `/pages/report-detail/index?id=${newReport.id}` });
+            }, 1000);
           }, 1500);
         }
       },
@@ -192,10 +192,32 @@ const ReportPage: React.FC = () => {
 
   const viewHistory = () => {
     Taro.showActionSheet({
-      itemList: ['查看我的上报', '按类型查看', '查看全部上报'],
+      itemList: ['查看我的上报'],
       success: (res) => {
-        console.log('[Report] 查看历史', res.tapIndex);
-        Taro.showToast({ title: '历史记录功能开发中', icon: 'none' });
+        if (res.tapIndex === 0) {
+          initReports();
+          const myReports = useReportStore.getState().getMyReports();
+          if (myReports.length === 0) {
+            Taro.showToast({ title: '暂无上报记录', icon: 'none' });
+            return;
+          }
+
+          if (myReports.length === 1) {
+            Taro.navigateTo({ url: `/pages/report-detail/index?id=${myReports[0].id}` });
+            return;
+          }
+
+          const listItems = myReports.map(r => `${r.createTime} - ${r.typeName}`);
+          Taro.showActionSheet({
+            itemList: listItems,
+            success: (r2) => {
+              const report = myReports[r2.tapIndex];
+              if (report) {
+                Taro.navigateTo({ url: `/pages/report-detail/index?id=${report.id}` });
+              }
+            },
+          });
+        }
       },
     });
   };

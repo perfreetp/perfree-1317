@@ -10,6 +10,7 @@ export default defineAppConfig({
     'pages/task-detail/index',
     'pages/report-detail/index',
     'pages/notice/index',
+    'pages/record-detail/index',
   ],
   window: {
     backgroundTextStyle: 'light',

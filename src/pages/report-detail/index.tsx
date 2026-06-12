@@ -16,7 +16,7 @@ const ReportDetailPage: React.FC = () => {
     initReports();
     const found = getReportById(reportId);
     setReport(found);
-    console.log('[ReportDetail] 加载上报', reportId);
+    console.log('[ReportDetail] 加载上报', reportId, found);
   };
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const ReportDetailPage: React.FC = () => {
   const statusMap: Record<string, { text: string; color: string; class: string }> = {
     pending: { text: '待处理', color: '#ff7d00', class: 'pending' },
     processing: { text: '处理中', color: '#165dff', class: 'processing' },
-    completed: { text: '已处理', color: '#00b42a', class: 'completed' },
+    completed: { text: '已解决', color: '#00b42a', class: 'completed' },
   };
 
   const typeIconMap: Record<string, string> = {
@@ -70,11 +70,11 @@ const ReportDetailPage: React.FC = () => {
     other: '⚠️',
   };
 
-  const timeline = [
-    { time: report.createTime, text: '已确认，正在派单', done: report.status !== 'pending' },
-    { time: '稍后', text: '已接收，正在处理', done: report.status === 'completed' },
-    { time: '---', text: '等待处理结果', done: false },
-  ];
+  const displayProgress = report.progress && report.progress.length > 0
+    ? report.progress
+    : [
+        { status: 'pending', statusText: '待处理', time: report.createTime, operator: '系统', remark: '已提交上报，等待值班室派单' },
+      ];
 
   return (
     <ScrollView scrollY className={styles.page}>
@@ -157,25 +157,39 @@ const ReportDetailPage: React.FC = () => {
       <View className={styles.section}>
         <Text className={styles.sectionTitle}>处理进度</Text>
         <View className={styles.timeline}>
-          {timeline.map((item, index) => (
+          {displayProgress.map((node, index) => (
             <View key={index} className={styles.timelineItem}>
               <View
                 className={classnames(
                   styles.timelineDot,
-                  item.done ? styles.done : styles.pending
+                  styles.done
                 )}
               >
-                {item.done && <Text className={styles.dotCheck}>✓</Text>}
+                <Text className={styles.dotCheck}>✓</Text>
               </View>
               <View className={styles.timelineContent}>
-                <Text className={styles.timelineText}>{item.text}</Text>
-                <Text className={styles.timelineTime}>{item.time}</Text>
+                <Text className={styles.timelineText}>{node.statusText}</Text>
+                <Text className={styles.timelineTime}>{node.time} · {node.operator}</Text>
+                {node.remark && (
+                  <View className={styles.timelineRemark}>
+                    <Text className={styles.timelineRemarkText}>{node.remark}</Text>
+                  </View>
+                )}
               </View>
-              {index < timeline.length - 1 && <View className={styles.timelineLine}></View>}
+              {index < displayProgress.length - 1 && <View className={styles.timelineLine}></View>}
             </View>
           ))}
         </View>
       </View>
+
+      {report.dutyRemark && (
+        <View className={styles.section}>
+          <Text className={styles.sectionTitle}>值班室备注</Text>
+          <View className={styles.dutyRemarkCard}>
+            <Text className={styles.dutyRemarkText}>{report.dutyRemark}</Text>
+          </View>
+        </View>
+      )}
 
       <View style={{ height: '160rpx' }}></View>
 

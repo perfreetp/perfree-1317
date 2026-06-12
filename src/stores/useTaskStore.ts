@@ -1,7 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PatrolTask, Checkpoint } from '@/types';
+import { PatrolTask } from '@/types';
 import { taskList } from '@/data/tasks';
+import { usePatrolRecordStore } from './usePatrolRecordStore';
+
+const getTodayStr = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const day = today.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getTimeStr = () => {
+  return new Date().toLocaleTimeString().slice(0, 5);
+};
 
 interface TaskState {
   tasks: PatrolTask[];
@@ -14,12 +27,8 @@ interface TaskState {
   getCheckedCount: (taskId: string) => number;
   getTodayCheckedCount: () => number;
   getTodayDistance: () => number;
+  getOngoingTask: () => PatrolTask | undefined;
 }
-
-const getTodayStr = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-};
 
 export const useTaskStore = create<TaskState>()(
   persist(
@@ -47,26 +56,43 @@ export const useTaskStore = create<TaskState>()(
       },
 
       checkIn: (taskId: string, checkpointId: string) => {
-        const now = new Date().toLocaleTimeString().slice(0, 5);
+        const nowTime = getTimeStr();
+        const todayStr = getTodayStr();
+
         set((state) => {
+          let completedTask: PatrolTask | null = null;
+
           const tasks = state.tasks.map((task) => {
             if (task.id !== taskId) return task;
 
             const newCheckpoints = task.checkpoints.map((cp) =>
               cp.id === checkpointId
-                ? { ...cp, checked: true, checkedTime: now }
+                ? { ...cp, checked: true, checkedTime: nowTime, checkedDate: todayStr }
                 : cp
             );
 
             const allChecked = newCheckpoints.every((cp) => cp.checked);
 
-            return {
+            const updatedTask = {
               ...task,
               checkpoints: newCheckpoints,
               status: allChecked ? ('completed' as const) : task.status,
               endTime: allChecked ? new Date().toLocaleString() : task.endTime,
             };
+
+            if (allChecked && task.status !== 'completed') {
+              completedTask = updatedTask;
+            }
+
+            return updatedTask;
           });
+
+          if (completedTask) {
+            const recordStore = usePatrolRecordStore.getState();
+            recordStore.initRecords();
+            const newRecord = recordStore.generateRecordFromTask(completedTask);
+            recordStore.addRecord(newRecord);
+          }
 
           return { tasks };
         });
@@ -74,13 +100,26 @@ export const useTaskStore = create<TaskState>()(
 
       completeTask: (taskId: string) => {
         const now = new Date().toLocaleString();
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
+        set((state) => {
+          const tasks = state.tasks.map((task) =>
             task.id === taskId
               ? { ...task, status: 'completed' as const, endTime: now }
               : task
-          ),
-        }));
+          );
+
+          const completed = tasks.find((t) => t.id === taskId);
+          if (completed && completed.status === 'completed') {
+            const recordStore = usePatrolRecordStore.getState();
+            recordStore.initRecords();
+            const existing = recordStore.records.find((r) => r.taskId === taskId);
+            if (!existing) {
+              const newRecord = recordStore.generateRecordFromTask(completed);
+              recordStore.addRecord(newRecord);
+            }
+          }
+
+          return { tasks };
+        });
       },
 
       getTaskById: (taskId: string) => {
@@ -97,13 +136,9 @@ export const useTaskStore = create<TaskState>()(
         const today = getTodayStr();
         let count = 0;
         get().tasks.forEach((task) => {
-          if (task.status === 'pending') return;
           task.checkpoints.forEach((cp) => {
-            if (cp.checked && cp.checkedTime) {
-              const checkDate = new Date().toISOString().split('T')[0];
-              if (checkDate === today) {
-                count++;
-              }
+            if (cp.checked && cp.checkedDate === today) {
+              count++;
             }
           });
         });
@@ -115,15 +150,21 @@ export const useTaskStore = create<TaskState>()(
         let distance = 0;
         get().tasks.forEach((task) => {
           if (task.status === 'pending') return;
-          const checkedCount = task.checkpoints.filter(
-            (cp) => cp.checked && cp.checkedTime
+
+          const todayChecked = task.checkpoints.filter(
+            (cp) => cp.checked && cp.checkedDate === today
           ).length;
-          if (checkedCount > 0 && task.checkpoints.length > 0) {
-            const progress = checkedCount / task.checkpoints.length;
+
+          if (todayChecked > 0 && task.checkpoints.length > 0) {
+            const progress = todayChecked / task.checkpoints.length;
             distance += task.distance * progress;
           }
         });
         return Math.round(distance * 10) / 10;
+      },
+
+      getOngoingTask: () => {
+        return get().tasks.find((t) => t.status === 'ongoing');
       },
     }),
     {
