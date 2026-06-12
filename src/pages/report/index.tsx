@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
+import { useReportStore } from '@/stores/useReportStore';
 
 type ReportType = 'poaching' | 'fire' | 'roadblock' | 'other';
 
@@ -14,6 +16,7 @@ const reportTypes = [
 ];
 
 const ReportPage: React.FC = () => {
+  const { initReports, addReport, reports } = useReportStore();
   const [type, setType] = useState<ReportType>('fire');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -22,6 +25,26 @@ const ReportPage: React.FC = () => {
   const [recordTime, setRecordTime] = useState(0);
   const [hasVoice, setHasVoice] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [lat, setLat] = useState(30.6630);
+  const [lng, setLng] = useState(104.0670);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    initReports();
+  }, [initReports]);
+
+  useDidShow(() => {
+    initReports();
+  });
+
+  useEffect(() => {
+    getLocation();
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   const getLocation = () => {
     setIsLocating(true);
@@ -32,6 +55,8 @@ const ReportPage: React.FC = () => {
       type: 'gcj02',
       success: (res) => {
         console.log('[Report] 位置获取成功', res);
+        setLat(res.latitude);
+        setLng(res.longitude);
         setLocation(`东经 ${res.longitude.toFixed(4)}° 北纬 ${res.latitude.toFixed(4)}°`);
       },
       fail: (err) => {
@@ -44,10 +69,6 @@ const ReportPage: React.FC = () => {
       },
     });
   };
-
-  React.useEffect(() => {
-    getLocation();
-  }, []);
 
   const handleChooseImage = () => {
     console.log('[Report] 选择图片');
@@ -72,33 +93,54 @@ const ReportPage: React.FC = () => {
 
   const handleRecordToggle = () => {
     if (isRecording) {
-      setIsRecording(false);
-      setHasVoice(true);
-      console.log('[Report] 停止录音，时长', recordTime, '秒');
+      stopRecording();
     } else {
-      setIsRecording(true);
-      setRecordTime(0);
-      setHasVoice(false);
-      console.log('[Report] 开始录音');
-      
-      const timer = setInterval(() => {
-        setRecordTime((prev) => {
-          if (prev >= 60) {
-            clearInterval(timer);
-            setIsRecording(false);
-            setHasVoice(true);
-            return 60;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+      startRecording();
     }
   };
 
+  const startRecording = () => {
+    setIsRecording(true);
+    setRecordTime(0);
+    setHasVoice(false);
+    console.log('[Report] 开始录音');
+
+    timerRef.current = setInterval(() => {
+      setRecordTime((prev) => {
+        if (prev >= 60) {
+          stopRecording();
+          return 60;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsRecording(false);
+    setHasVoice(true);
+    console.log('[Report] 停止录音，时长', recordTime, '秒');
+  };
+
   const handleDeleteVoice = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     setHasVoice(false);
     setRecordTime(0);
+    setIsRecording(false);
     console.log('[Report] 删除语音');
+  };
+
+  const formatVoiceTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleSubmit = () => {
@@ -115,8 +157,26 @@ const ReportPage: React.FC = () => {
       success: (res) => {
         if (res.confirm) {
           Taro.showLoading({ title: '提交中...' });
-          
+
           setTimeout(() => {
+            const typeNameMap: Record<string, string> = {
+              poaching: '偷采偷猎',
+              fire: '火源隐患',
+              roadblock: '临时封路',
+              other: '其他隐患',
+            };
+
+            addReport({
+              type,
+              typeName: typeNameMap[type],
+              description,
+              images,
+              voiceNote: hasVoice ? `${recordTime}秒语音描述` : undefined,
+              location,
+              lat,
+              lng,
+            });
+
             Taro.hideLoading();
             Taro.showToast({ title: '上报成功', icon: 'success' });
             setDescription('');
@@ -131,7 +191,13 @@ const ReportPage: React.FC = () => {
   };
 
   const viewHistory = () => {
-    Taro.showToast({ title: '历史记录功能开发中', icon: 'none' });
+    Taro.showActionSheet({
+      itemList: ['查看我的上报', '按类型查看', '查看全部上报'],
+      success: (res) => {
+        console.log('[Report] 查看历史', res.tapIndex);
+        Taro.showToast({ title: '历史记录功能开发中', icon: 'none' });
+      },
+    });
   };
 
   return (
@@ -219,12 +285,12 @@ const ReportPage: React.FC = () => {
             {hasVoice ? (
               <>
                 <Text className={styles.voiceStatus}>已录制语音</Text>
-                <Text className={styles.voiceTime}>时长 {recordTime} 秒</Text>
+                <Text className={styles.voiceTime}>时长 {formatVoiceTime(recordTime)}</Text>
               </>
             ) : isRecording ? (
               <>
                 <Text className={styles.voiceStatus}>正在录音...</Text>
-                <Text className={styles.voiceTime}>{recordTime}s / 60s</Text>
+                <Text className={styles.voiceTime}>{formatVoiceTime(recordTime)} / 01:00</Text>
               </>
             ) : (
               <>

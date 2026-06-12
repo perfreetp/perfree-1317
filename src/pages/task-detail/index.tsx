@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { getTaskById } from '@/data/tasks';
+import { useTaskStore } from '@/stores/useTaskStore';
 import { formatDistance, formatDuration } from '@/utils';
 import classnames from 'classnames';
 import { PatrolTask } from '@/types';
@@ -10,37 +10,38 @@ import { PatrolTask } from '@/types';
 const TaskDetailPage: React.FC = () => {
   const router = useRouter();
   const taskId = router.params.id || 'task002';
+  const { tasks, initTasks, acceptTask, checkIn, getTaskById } = useTaskStore();
   const [task, setTask] = useState<PatrolTask | undefined>();
 
-  useEffect(() => {
+  const loadTask = () => {
+    initTasks();
     const found = getTaskById(taskId);
     setTask(found);
-    console.log('[TaskDetail] 加载任务', taskId);
+    console.log('[TaskDetail] 加载任务', taskId, found?.status);
+  };
+
+  useEffect(() => {
+    loadTask();
   }, [taskId]);
+
+  useDidShow(() => {
+    loadTask();
+  });
 
   const handleCheckIn = () => {
     if (!task) return;
     console.log('[TaskDetail] 打卡');
-    
+
     const currentIndex = task.checkpoints.findIndex((cp) => !cp.checked);
     if (currentIndex >= 0) {
-      const newCheckpoints = [...task.checkpoints];
-      newCheckpoints[currentIndex] = {
-        ...newCheckpoints[currentIndex],
-        checked: true,
-        checkedTime: new Date().toLocaleTimeString().slice(0, 5),
-      };
+      const checkpoint = task.checkpoints[currentIndex];
+      checkIn(taskId, checkpoint.id);
 
-      const allChecked = newCheckpoints.every((cp) => cp.checked);
-      setTask({
-        ...task,
-        checkpoints: newCheckpoints,
-        status: allChecked ? 'completed' : 'ongoing',
-        endTime: allChecked ? new Date().toLocaleString() : undefined,
-      });
+      const updatedTask = getTaskById(taskId);
+      setTask(updatedTask);
 
       Taro.showToast({ title: '打卡成功', icon: 'success' });
-      console.log('[TaskDetail] 打卡成功', newCheckpoints[currentIndex].name);
+      console.log('[TaskDetail] 打卡成功', checkpoint.name);
     }
   };
 
@@ -51,11 +52,9 @@ const TaskDetailPage: React.FC = () => {
       content: '确定要领取该巡护任务吗？',
       success: (res) => {
         if (res.confirm) {
-          setTask({
-            ...task,
-            status: 'ongoing',
-            startTime: new Date().toLocaleString(),
-          });
+          acceptTask(taskId);
+          const updatedTask = getTaskById(taskId);
+          setTask(updatedTask);
           Taro.showToast({ title: '任务领取成功', icon: 'success' });
           console.log('[TaskDetail] 任务领取成功');
         }

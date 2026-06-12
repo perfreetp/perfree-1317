@@ -1,26 +1,141 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import { userInfo, patrolRecords, monthlyStats } from '@/data/stats';
 
 const StatsPage: React.FC = () => {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const formatDateStr = (date: Date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getDefaultDates = () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    return {
+      start: formatDateStr(sevenDaysAgo),
+      end: formatDateStr(today),
+    };
+  };
+
   const handleExport = () => {
     console.log('[Stats] 导出记录');
     Taro.showActionSheet({
       itemList: ['导出本周记录', '导出本月记录', '按日期范围导出'],
       success: (res) => {
         console.log('[Stats] 选择导出类型', res.tapIndex);
-        Taro.showLoading({ title: '导出中...' });
-        setTimeout(() => {
-          Taro.hideLoading();
-          Taro.showToast({ title: '导出成功', icon: 'success' });
-        }, 1500);
+        if (res.tapIndex === 2) {
+          openDatePicker();
+        } else {
+          const rangeText = res.tapIndex === 0 ? '本周' : '本月';
+          doExport(rangeText);
+        }
       },
       fail: (err) => {
         console.error('[Stats] 导出取消', err);
       },
     });
+  };
+
+  const openDatePicker = () => {
+    const defaults = getDefaultDates();
+    setStartDate(defaults.start);
+    setEndDate(defaults.end);
+    setShowDatePicker(true);
+  };
+
+  const handleStartDateChange = (e: any) => {
+    setStartDate(e.detail.value);
+  };
+
+  const handleEndDateChange = (e: any) => {
+    setEndDate(e.detail.value);
+  };
+
+  const pickStartDate = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    Taro.showModal({
+      title: '选择开始日期',
+      content: `请输入开始日期（格式：YYYY-MM-DD）\n默认：${startDate}`,
+      editable: true,
+      placeholderText: '如 2024-01-15',
+      success: (res) => {
+        if (res.confirm && res.content) {
+          const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+          if (datePattern.test(res.content)) {
+            setStartDate(res.content);
+          } else {
+            Taro.showToast({ title: '日期格式不正确', icon: 'none' });
+          }
+        }
+      },
+    });
+  };
+
+  const pickEndDate = () => {
+    Taro.showModal({
+      title: '选择结束日期',
+      content: `请输入结束日期（格式：YYYY-MM-DD）\n默认：${endDate}`,
+      editable: true,
+      placeholderText: '如 2024-01-31',
+      success: (res) => {
+        if (res.confirm && res.content) {
+          const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+          if (datePattern.test(res.content)) {
+            setEndDate(res.content);
+          } else {
+            Taro.showToast({ title: '日期格式不正确', icon: 'none' });
+          }
+        }
+      },
+    });
+  };
+
+  const cancelDatePicker = () => {
+    setShowDatePicker(false);
+  };
+
+  const confirmExport = () => {
+    if (!startDate || !endDate) {
+      Taro.showToast({ title: '请选择完整日期范围', icon: 'none' });
+      return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+      Taro.showToast({ title: '开始日期不能晚于结束日期', icon: 'none' });
+      return;
+    }
+
+    setShowDatePicker(false);
+    doExport(`${startDate} 至 ${endDate}`);
+  };
+
+  const doExport = (range: string) => {
+    console.log('[Stats] 开始导出', range);
+    Taro.showLoading({ title: '导出中...' });
+
+    setTimeout(() => {
+      Taro.hideLoading();
+      Taro.showToast({
+        title: '导出成功',
+        icon: 'success',
+        duration: 2000,
+      });
+      console.log('[Stats] 导出完成', range);
+    }, 1500);
   };
 
   return (
@@ -120,6 +235,49 @@ const StatsPage: React.FC = () => {
       </View>
 
       <View style={{ height: '40rpx' }}></View>
+
+      {showDatePicker && (
+        <View className={styles.datePickerOverlay}>
+          <View className={styles.datePickerContent}>
+            <Text className={styles.datePickerTitle}>选择导出日期范围</Text>
+
+            <View className={styles.datePickerRow}>
+              <View className={styles.datePickerLabel}>
+                <Text>开始日期</Text>
+              </View>
+              <View className={styles.datePickerInput} onClick={pickStartDate}>
+                <Text className={styles.datePickerText}>{startDate || '请选择'}</Text>
+                <Text className={styles.datePickerArrow}>›</Text>
+              </View>
+            </View>
+
+            <View className={styles.datePickerRow}>
+              <View className={styles.datePickerLabel}>
+                <Text>结束日期</Text>
+              </View>
+              <View className={styles.datePickerInput} onClick={pickEndDate}>
+                <Text className={styles.datePickerText}>{endDate || '请选择'}</Text>
+                <Text className={styles.datePickerArrow}>›</Text>
+              </View>
+            </View>
+
+            <View className={styles.datePickerHint}>
+              <Text className={styles.datePickerHintText}>
+                选择日期范围后，将导出该时间段内的所有巡护记录
+              </Text>
+            </View>
+
+            <View className={styles.datePickerActions}>
+              <View className={styles.datePickerCancel} onClick={cancelDatePicker}>
+                <Text>取消</Text>
+              </View>
+              <View className={styles.datePickerConfirm} onClick={confirmExport}>
+                <Text>确认导出</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 };

@@ -1,63 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Image } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { reportList } from '@/data/reports';
+import { useReportStore } from '@/stores/useReportStore';
 import classnames from 'classnames';
 import { ReportItem } from '@/types';
 
 const ReportDetailPage: React.FC = () => {
   const router = useRouter();
-  const reportId = router.params.id || 'report002';
+  const reportId = router.params.id || 'report001';
+  const { initReports, getReportById } = useReportStore();
   const [report, setReport] = useState<ReportItem | undefined>();
 
-  useEffect(() => {
-    const found = reportList.find((r) => r.id === reportId);
+  const loadReport = () => {
+    initReports();
+    const found = getReportById(reportId);
     setReport(found);
     console.log('[ReportDetail] 加载上报', reportId);
+  };
+
+  useEffect(() => {
+    loadReport();
   }, [reportId]);
 
-  const getStatusText = (status: string) => {
-    const map: Record<string, string> = {
-      pending: '待处理',
-      processing: '处理中',
-      resolved: '已解决',
-    };
-    return map[status] || status;
-  };
+  useDidShow(() => {
+    loadReport();
+  });
 
-  const getTypeIcon = (type: string) => {
-    const map: Record<string, string> = {
-      poaching: '🦌',
-      fire: '🔥',
-      roadblock: '🚧',
-      other: '⚠️',
-    };
-    return map[type] || '📝';
-  };
+  const waveBars = Array.from({ length: 30 }, () => {
+    const height = Math.random() * 30 + 10;
+    return height;
+  });
 
-  const handlePreviewImage = (index: number) => {
-    if (!report) return;
-    console.log('[ReportDetail] 预览图片', index);
-    Taro.previewImage({
-      current: report.images[index],
-      urls: report.images,
-    });
-  };
-
-  const handleCall = () => {
-    console.log('[ReportDetail] 联系值班室');
+  const handleCallDuty = () => {
     Taro.makePhoneCall({
       phoneNumber: '02888881234',
-      fail: (err) => {
-        console.error('[ReportDetail] 拨打电话失败', err);
-      },
     });
   };
 
   const handleFollow = () => {
-    console.log('[ReportDetail] 关注此上报');
-    Taro.showToast({ title: '已关注', icon: 'success' });
+    Taro.showToast({ title: '已关注此上报', icon: 'success' });
+  };
+
+  const previewImage = (url: string) => {
+    Taro.previewImage({
+      urls: report?.images || [],
+      current: url,
+    });
   };
 
   if (!report) {
@@ -68,66 +57,74 @@ const ReportDetailPage: React.FC = () => {
     );
   }
 
-  const timeline = [
-    { status: 'done', content: '隐患已确认，已安排处理', time: '2024-01-15 14:30' },
-    { status: 'done', content: '值班室已接收上报', time: '2024-01-15 09:46' },
-    { status: 'pending', content: '等待处理结果', time: '' },
-  ];
+  const statusMap: Record<string, { text: string; color: string; class: string }> = {
+    pending: { text: '待处理', color: '#ff7d00', class: 'pending' },
+    processing: { text: '处理中', color: '#165dff', class: 'processing' },
+    completed: { text: '已处理', color: '#00b42a', class: 'completed' },
+  };
 
-  const waveBars = Array.from({ length: 30 }, () => {
-    const height = Math.random() * 30 + 10;
-    return height;
-  });
+  const typeIconMap: Record<string, string> = {
+    poaching: '🦌',
+    fire: '🔥',
+    roadblock: '🚧',
+    other: '⚠️',
+  };
+
+  const timeline = [
+    { time: report.createTime, text: '已确认，正在派单', done: report.status !== 'pending' },
+    { time: '稍后', text: '已接收，正在处理', done: report.status === 'completed' },
+    { time: '---', text: '等待处理结果', done: false },
+  ];
 
   return (
     <ScrollView scrollY className={styles.page}>
-      <View className={styles.section}>
-        <View className={styles.typeHeader}>
-          <View className={styles.typeIcon}>
-            <Text>{getTypeIcon(report.type)}</Text>
-          </View>
-          <View className={styles.typeInfo}>
-            <Text className={styles.typeName}>{report.typeName}</Text>
-            <Text className={styles.reportId}>上报编号：{report.id.toUpperCase()}</Text>
-          </View>
-          <View className={`${styles.statusBadge} ${styles[report.status]}`}>
-            <Text>{getStatusText(report.status)}</Text>
-          </View>
+      <View className={`${styles.header} ${styles[report.type]}`}>
+        <View className={styles.typeIcon}>
+          <Text>{typeIconMap[report.type] || '⚠️'}</Text>
+        </View>
+        <Text className={styles.typeName}>{report.typeName}</Text>
+        <Text className={styles.reportNo}>编号：{report.id}</Text>
+        <View className={`${styles.statusBadge} ${styles[statusMap[report.status]?.class]}`}>
+          <Text>{statusMap[report.status]?.text || '待处理'}</Text>
         </View>
       </View>
 
       <View className={styles.section}>
         <Text className={styles.sectionTitle}>基本信息</Text>
-        <View className={styles.infoRow}>
-          <Text className={styles.infoLabel}>上报人</Text>
-          <Text className={styles.infoValue}>{report.reporter}</Text>
-        </View>
-        <View className={styles.infoRow}>
-          <Text className={styles.infoLabel}>上报时间</Text>
-          <Text className={styles.infoValue}>{report.createTime}</Text>
-        </View>
-        <View className={styles.infoRow}>
-          <Text className={styles.infoLabel}>位置</Text>
-          <Text className={styles.infoValue}>{report.location}</Text>
+        <View className={styles.infoCard}>
+          <View className={styles.infoItem}>
+            <Text className={styles.infoLabel}>上报人</Text>
+            <Text className={styles.infoValue}>{report.reporter}</Text>
+          </View>
+          <View className={styles.infoItem}>
+            <Text className={styles.infoLabel}>上报时间</Text>
+            <Text className={styles.infoValue}>{report.createTime}</Text>
+          </View>
+          <View className={styles.infoItem}>
+            <Text className={styles.infoLabel}>位置</Text>
+            <Text className={styles.infoValue}>{report.location}</Text>
+          </View>
         </View>
       </View>
 
       <View className={styles.section}>
         <Text className={styles.sectionTitle}>详细描述</Text>
-        <Text className={styles.descText}>{report.description}</Text>
+        <View className={styles.descCard}>
+          <Text className={styles.descText}>{report.description}</Text>
+        </View>
       </View>
 
-      {report.images.length > 0 && (
+      {report.images && report.images.length > 0 && (
         <View className={styles.section}>
           <Text className={styles.sectionTitle}>现场照片</Text>
-          <View className={styles.imageGrid}>
+          <View className={styles.photoGrid}>
             {report.images.map((img, index) => (
               <View
                 key={index}
-                className={styles.imageItem}
-                onClick={() => handlePreviewImage(index)}
+                className={styles.photoItem}
+                onClick={() => previewImage(img)}
               >
-                <Image className={styles.imageImg} src={img} mode="aspectFill" />
+                <Image className={styles.photoImg} src={img} mode="aspectFill" />
               </View>
             ))}
           </View>
@@ -137,21 +134,21 @@ const ReportDetailPage: React.FC = () => {
       {report.voiceNote ? (
         <View className={styles.section}>
           <Text className={styles.sectionTitle}>语音备注</Text>
-          <View className={styles.voiceBox}>
-            <View className={styles.voicePlayBtn}>
-              <Text>▶</Text>
-            </View>
-            <View className={styles.voiceInfo}>
-              <View className={styles.voiceWave}>
-                {waveBars.map((height, i) => (
+          <View className={styles.voiceCard}>
+            <View className={styles.voicePlayer}>
+              <View className={styles.playBtn}>
+                <Text>▶</Text>
+              </View>
+              <View className={styles.waveform}>
+                {waveBars.map((height, index) => (
                   <View
-                    key={i}
+                    key={index}
                     className={styles.waveBar}
                     style={{ height: `${height}rpx` }}
                   ></View>
                 ))}
               </View>
-              <Text className={styles.voiceDuration}>时长 00:28</Text>
+              <Text className={styles.duration}>{report.voiceNote}</Text>
             </View>
           </View>
         </View>
@@ -165,21 +162,26 @@ const ReportDetailPage: React.FC = () => {
               <View
                 className={classnames(
                   styles.timelineDot,
-                  item.status === 'done' ? styles.done : styles.pending
+                  item.done ? styles.done : styles.pending
                 )}
-              ></View>
-              <Text className={styles.timelineContent}>{item.content}</Text>
-              {item.time && <Text className={styles.timelineTime}>{item.time}</Text>}
+              >
+                {item.done && <Text className={styles.dotCheck}>✓</Text>}
+              </View>
+              <View className={styles.timelineContent}>
+                <Text className={styles.timelineText}>{item.text}</Text>
+                <Text className={styles.timelineTime}>{item.time}</Text>
+              </View>
+              {index < timeline.length - 1 && <View className={styles.timelineLine}></View>}
             </View>
           ))}
         </View>
       </View>
 
-      <View style={{ height: '140rpx' }}></View>
+      <View style={{ height: '160rpx' }}></View>
 
       <View className={styles.bottomBar}>
-        <View className={styles.outlineBtn} onClick={handleCall}>
-          <Text>联系值班室</Text>
+        <View className={styles.secondaryBtn} onClick={handleCallDuty}>
+          <Text>📞 联系值班室</Text>
         </View>
         <View className={styles.primaryBtn} onClick={handleFollow}>
           <Text>关注此上报</Text>

@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
-import { taskList } from '@/data/tasks';
+import { useTaskStore } from '@/stores/useTaskStore';
 import { formatDistance, formatDuration } from '@/utils';
 import classnames from 'classnames';
 
@@ -11,11 +11,15 @@ type TabType = 'all' | 'pending' | 'ongoing' | 'completed';
 
 const TasksPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  const [tasks, setTasks] = useState(taskList);
+  const { tasks, initTasks, acceptTask } = useTaskStore();
+
+  useEffect(() => {
+    initTasks();
+  }, [initTasks]);
 
   useDidShow(() => {
     console.log('[Tasks] 页面显示');
-    setTasks([...taskList]);
+    initTasks();
   });
 
   const tabs = [
@@ -44,19 +48,15 @@ const TasksPage: React.FC = () => {
         content: '确定要领取该巡护任务吗？',
         success: (res) => {
           if (res.confirm) {
-            setTasks((prev) =>
-              prev.map((t) =>
-                t.id === taskId
-                  ? { ...t, status: 'ongoing' as const, startTime: new Date().toLocaleString() }
-                  : t
-              )
-            );
+            acceptTask(taskId);
             Taro.showToast({ title: '任务领取成功', icon: 'success' });
             console.log('[Tasks] 任务领取成功', taskId);
           }
         },
       });
     } else if (status === 'ongoing') {
+      Taro.navigateTo({ url: `/pages/task-detail/index?id=${taskId}` });
+    } else if (status === 'completed') {
       Taro.navigateTo({ url: `/pages/task-detail/index?id=${taskId}` });
     }
   };
@@ -77,6 +77,10 @@ const TasksPage: React.FC = () => {
       completed: '查看详情',
     };
     return map[status] || '查看';
+  };
+
+  const getCheckedCount = (checkpoints: any[]) => {
+    return checkpoints.filter((cp) => cp.checked).length;
   };
 
   return (
@@ -133,7 +137,7 @@ const TasksPage: React.FC = () => {
                 <View className={styles.checkpointProgress}>
                   <Text>打卡点：</Text>
                   <Text className={styles.checkpointValue}>
-                    {task.checkpoints.filter((cp) => cp.checked).length}
+                    {getCheckedCount(task.checkpoints)}
                   </Text>
                   <Text>/{task.checkpoints.length}</Text>
                 </View>

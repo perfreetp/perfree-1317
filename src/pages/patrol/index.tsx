@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
+import { useTaskStore } from '@/stores/useTaskStore';
 import { userInfo, monthlyStats } from '@/data/stats';
 import { noticeList } from '@/data/notices';
-import { taskList } from '@/data/tasks';
 
 const PatrolPage: React.FC = () => {
+  const { tasks, initTasks, getTodayCheckedCount, getTodayDistance } = useTaskStore();
   const [isPatrolling, setIsPatrolling] = useState(false);
   const [todayDistance, setTodayDistance] = useState(0);
   const [todayCheckpoints, setTodayCheckpoints] = useState(0);
+
+  useEffect(() => {
+    initTasks();
+  }, [initTasks]);
 
   useDidShow(() => {
     console.log('[Patrol] 页面显示');
@@ -18,13 +23,15 @@ const PatrolPage: React.FC = () => {
   });
 
   const loadPatrolStatus = () => {
-    const ongoingTask = taskList.find((t) => t.status === 'ongoing');
+    initTasks();
+    const ongoingTask = tasks.find((t) => t.status === 'ongoing');
     if (ongoingTask) {
       setIsPatrolling(true);
-      const checkedCount = ongoingTask.checkpoints.filter((cp) => cp.checked).length;
-      setTodayCheckpoints(checkedCount);
-      setTodayDistance(2.3);
+    } else {
+      setIsPatrolling(false);
     }
+    setTodayCheckpoints(getTodayCheckedCount());
+    setTodayDistance(getTodayDistance());
   };
 
   const handleStartPatrol = () => {
