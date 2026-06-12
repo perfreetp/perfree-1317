@@ -96,6 +96,59 @@
   font-weight: $font-weight-medium;
 }
 
+.ongoingTask {
+  background: linear-gradient(135deg, rgba($color-primary, 0.08) 0%, rgba($color-primary, 0.03) 100%);
+  border: 2rpx solid rgba($color-primary, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba($color-primary, 0.12);
+  }
+}
+
+.ongoingInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.ongoingLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.ongoingName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.ongoingNext {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.ongoingAction {
+  flex-shrink: 0;
+  margin-left: $spacing-md;
+}
+
+.ongoingActionText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
 .statsRow {
   display: flex;
   gap: $spacing-md;

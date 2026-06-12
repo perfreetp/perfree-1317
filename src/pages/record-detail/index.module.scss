@@ -7,7 +7,7 @@
 
 .header {
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
-  padding: $spacing-xl $page-padding;
+  padding: $spacing-xl $page-padding 60rpx;
   color: $color-text-white;
   text-align: center;
 }
@@ -27,16 +27,70 @@
 .recordDate {
   font-size: $font-size-sm;
   opacity: 0.9;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.statsRow {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.headerStat {
+  flex: 1;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  padding: $spacing-sm 0;
+}
+
+.headerStatValue {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+}
+
+.headerStatLabel {
+  display: block;
+  font-size: 20rpx;
+  opacity: 0.9;
+  margin-top: 4rpx;
+}
+
+.tabBar {
+  display: flex;
+  margin: -24rpx $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 6rpx;
+  box-shadow: $shadow-card;
+  position: relative;
+  z-index: 1;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md 0;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+
+  &.activeTab {
+    background: $color-primary;
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+  }
 }
 
 .section {
-  margin: -24rpx $page-padding $spacing-lg;
+  margin: 0 $page-padding $spacing-lg;
   background: $color-bg-card;
   border-radius: $radius-lg;
   padding: $spacing-lg;
   box-shadow: $shadow-card;
-  position: relative;
-  z-index: 1;
 }
 
 .sectionTitle {
@@ -50,6 +104,105 @@
 
 .sectionIcon {
   margin-right: $spacing-xs;
+}
+
+.emptyTimeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.timeline {
+  padding-left: 8rpx;
+}
+
+.timelineItem {
+  display: flex;
+  min-height: 120rpx;
+}
+
+.timelineLeft {
+  width: 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.eventDot {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.eventIcon {
+  font-size: 28rpx;
+}
+
+.timelineLine {
+  width: 4rpx;
+  flex: 1;
+  background: $color-divider;
+  margin: 8rpx 0;
+}
+
+.timelineRight {
+  flex: 1;
+  padding-bottom: $spacing-lg;
+  padding-left: $spacing-sm;
+}
+
+.eventHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6rpx;
+}
+
+.eventTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.eventTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.eventDetail {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.eventReportLink {
+  display: inline-block;
+  margin-top: 6rpx;
+}
+
+.eventReportLinkText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
 }
 
 .timeCard {
@@ -83,34 +236,6 @@
   width: 1rpx;
   height: 60rpx;
   background: $color-divider;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-sm;
-}
-
-.statItem {
-  text-align: center;
-  padding: $spacing-sm 0;
-  background: $color-bg-page;
-  border-radius: $radius-md;
-}
-
-.statValue {
-  display: block;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $color-primary;
-  line-height: 1.2;
-}
-
-.statLabel {
-  display: block;
-  font-size: 20rpx;
-  color: $color-text-secondary;
-  margin-top: 4rpx;
 }
 
 .checkpointList {

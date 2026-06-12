@@ -45,6 +45,7 @@ export interface ReportItem {
   status: 'pending' | 'processing' | 'completed';
   createTime: string;
   reporter: string;
+  taskId?: string;
   progress?: ReportProgressNode[];
   dutyRemark?: string;
 }
@@ -70,6 +71,15 @@ export interface CheckpointRecord {
   lng: number;
 }
 
+export interface TimelineEvent {
+  type: 'start' | 'checkpoint' | 'report' | 'complete';
+  time: string;
+  title: string;
+  detail?: string;
+  icon: string;
+  reportId?: string;
+}
+
 export interface PatrolRecord {
   id: string;
   taskId?: string;
@@ -84,6 +94,7 @@ export interface PatrolRecord {
   turnBack: number;
   checkpointDetails?: CheckpointRecord[];
   reportIds?: string[];
+  timeline?: TimelineEvent[];
 }
 
 export interface Notice {

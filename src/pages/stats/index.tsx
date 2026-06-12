@@ -5,27 +5,36 @@ import { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import { userInfo, monthlyStats } from '@/data/stats';
 import { usePatrolRecordStore } from '@/stores/usePatrolRecordStore';
+import { useReportStore } from '@/stores/useReportStore';
 import { PatrolRecord } from '@/types';
 
 const StatsPage: React.FC = () => {
   const { initRecords, records, getRecordsByDateRange } = usePatrolRecordStore();
+  const { initReports, getUnresolvedCount } = useReportStore();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showExportPreview, setShowExportPreview] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [filterRoute, setFilterRoute] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [exportData, setExportData] = useState<{
     records: PatrolRecord[];
     totalDistance: number;
     totalCheckpoints: number;
+    totalReports: number;
+    unresolvedCount: number;
     range: string;
   } | null>(null);
 
   useEffect(() => {
     initRecords();
-  }, [initRecords]);
+    initReports();
+  }, [initRecords, initReports]);
 
   useDidShow(() => {
     initRecords();
+    initReports();
   });
 
   const formatDateStr = (date: Date) => {
@@ -78,6 +87,9 @@ const StatsPage: React.FC = () => {
     const defaults = getDefaultDates();
     setStartDate(defaults.start);
     setEndDate(defaults.end);
+    setFilterRoute('');
+    setFilterType('');
+    setFilterStatus('');
     setShowDatePicker(true);
   };
 
@@ -119,6 +131,41 @@ const StatsPage: React.FC = () => {
     });
   };
 
+  const selectFilterRoute = () => {
+    const routeNames = [...new Set(records.map((r) => r.taskName).filter(Boolean))];
+    if (routeNames.length === 0) {
+      Taro.showToast({ title: '暂无路线数据', icon: 'none' });
+      return;
+    }
+    const items = ['全部路线', ...routeNames as string[]];
+    Taro.showActionSheet({
+      itemList: items,
+      success: (res) => {
+        setFilterRoute(res.tapIndex === 0 ? '' : (items[res.tapIndex] || ''));
+      },
+    });
+  };
+
+  const selectFilterType = () => {
+    const items = ['全部类型', '偷采偷猎', '火源隐患', '临时封路', '其他隐患'];
+    Taro.showActionSheet({
+      itemList: items,
+      success: (res) => {
+        setFilterType(res.tapIndex === 0 ? '' : items[res.tapIndex]);
+      },
+    });
+  };
+
+  const selectFilterStatus = () => {
+    const items = ['全部状态', '待处理', '处理中', '已解决'];
+    Taro.showActionSheet({
+      itemList: items,
+      success: (res) => {
+        setFilterStatus(res.tapIndex === 0 ? '' : items[res.tapIndex]);
+      },
+    });
+  };
+
   const cancelDatePicker = () => {
     setShowDatePicker(false);
   };
@@ -135,14 +182,25 @@ const StatsPage: React.FC = () => {
     }
 
     initRecords();
-    const filteredRecords = getRecordsByDateRange(start, end);
+    let filteredRecords = getRecordsByDateRange(start, end);
+
+    if (filterRoute) {
+      filteredRecords = filteredRecords.filter((r) => r.taskName === filterRoute);
+    }
+
     const totalDistance = filteredRecords.reduce((sum, r) => sum + r.distance, 0);
     const totalCheckpoints = filteredRecords.reduce((sum, r) => sum + r.checkpoints, 0);
+    const totalReports = filteredRecords.reduce((sum, r) => sum + (r.reports || 0), 0);
+
+    initReports();
+    const unresolvedCount = getUnresolvedCount();
 
     setExportData({
       records: filteredRecords,
       totalDistance: Math.round(totalDistance * 10) / 10,
       totalCheckpoints,
+      totalReports,
+      unresolvedCount,
       range: `${start} 至 ${end}`,
     });
 
@@ -168,7 +226,6 @@ const StatsPage: React.FC = () => {
         icon: 'success',
         duration: 2000,
       });
-      console.log('[Stats] 导出完成', exportData.range);
     }, 1500);
   };
 
@@ -305,7 +362,7 @@ const StatsPage: React.FC = () => {
       {showDatePicker && (
         <View className={styles.datePickerOverlay}>
           <View className={styles.datePickerContent}>
-            <Text className={styles.datePickerTitle}>选择导出日期范围</Text>
+            <Text className={styles.datePickerTitle}>选择导出条件</Text>
 
             <View className={styles.datePickerRow}>
               <View className={styles.datePickerLabel}>
@@ -327,10 +384,34 @@ const StatsPage: React.FC = () => {
               </View>
             </View>
 
-            <View className={styles.datePickerHint}>
-              <Text className={styles.datePickerHintText}>
-                选择日期范围后，将预览该时间段内的导出数据
-              </Text>
+            <View className={styles.datePickerRow}>
+              <View className={styles.datePickerLabel}>
+                <Text>路线筛选</Text>
+              </View>
+              <View className={styles.datePickerInput} onClick={selectFilterRoute}>
+                <Text className={styles.datePickerText}>{filterRoute || '全部路线'}</Text>
+                <Text className={styles.datePickerArrow}>›</Text>
+              </View>
+            </View>
+
+            <View className={styles.datePickerRow}>
+              <View className={styles.datePickerLabel}>
+                <Text>隐患类型</Text>
+              </View>
+              <View className={styles.datePickerInput} onClick={selectFilterType}>
+                <Text className={styles.datePickerText}>{filterType || '全部类型'}</Text>
+                <Text className={styles.datePickerArrow}>›</Text>
+              </View>
+            </View>
+
+            <View className={styles.datePickerRow}>
+              <View className={styles.datePickerLabel}>
+                <Text>处理状态</Text>
+              </View>
+              <View className={styles.datePickerInput} onClick={selectFilterStatus}>
+                <Text className={styles.datePickerText}>{filterStatus || '全部状态'}</Text>
+                <Text className={styles.datePickerArrow}>›</Text>
+              </View>
             </View>
 
             <View className={styles.datePickerActions}>
@@ -367,10 +448,21 @@ const StatsPage: React.FC = () => {
               </View>
             </View>
 
-            <View className={styles.datePickerHint}>
-              <Text className={styles.datePickerHintText}>
-                确认后将导出以上 {exportData.records.length} 条巡护记录
-              </Text>
+            <View className={styles.exportPreviewGrid}>
+              <View className={styles.exportPreviewItem}>
+                <Text className={styles.exportPreviewValue}>{exportData.totalReports}</Text>
+                <Text className={styles.exportPreviewLabel}>隐患数量</Text>
+              </View>
+              <View className={styles.exportPreviewItem}>
+                <Text className={styles.exportPreviewValue}>{exportData.unresolvedCount}</Text>
+                <Text className={styles.exportPreviewLabel}>未解决</Text>
+              </View>
+              <View className={styles.exportPreviewItem}>
+                <Text className={styles.exportPreviewValue}>
+                  {exportData.totalReports - exportData.unresolvedCount}
+                </Text>
+                <Text className={styles.exportPreviewLabel}>已解决</Text>
+              </View>
             </View>
 
             <View className={styles.datePickerActions}>

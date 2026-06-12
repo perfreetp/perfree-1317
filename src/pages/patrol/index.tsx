@@ -6,29 +6,36 @@ import styles from './index.module.scss';
 import { useTaskStore } from '@/stores/useTaskStore';
 import { userInfo, monthlyStats } from '@/data/stats';
 import { noticeList } from '@/data/notices';
+import { PatrolTask } from '@/types';
 
 const PatrolPage: React.FC = () => {
-  const { tasks, initTasks, getTodayCheckedCount, getTodayDistance } = useTaskStore();
+  const { tasks, initTasks, getTodayCheckedCount, getTodayDistance, getOngoingTask } = useTaskStore();
   const [isPatrolling, setIsPatrolling] = useState(false);
   const [todayDistance, setTodayDistance] = useState(0);
   const [todayCheckpoints, setTodayCheckpoints] = useState(0);
+  const [ongoingTask, setOngoingTask] = useState<PatrolTask | undefined>();
+  const [nextCheckpoint, setNextCheckpoint] = useState<string>('');
 
   useEffect(() => {
     initTasks();
   }, [initTasks]);
 
   useDidShow(() => {
-    console.log('[Patrol] 页面显示');
     loadPatrolStatus();
   });
 
   const loadPatrolStatus = () => {
     initTasks();
-    const ongoingTask = tasks.find((t) => t.status === 'ongoing');
-    if (ongoingTask) {
+    const task = getOngoingTask();
+    if (task) {
       setIsPatrolling(true);
+      setOngoingTask(task);
+      const next = task.checkpoints.find((cp) => !cp.checked);
+      setNextCheckpoint(next ? next.name : '已全部完成');
     } else {
       setIsPatrolling(false);
+      setOngoingTask(undefined);
+      setNextCheckpoint('');
     }
     setTodayCheckpoints(getTodayCheckedCount());
     setTodayDistance(getTodayDistance());
@@ -43,12 +50,17 @@ const PatrolPage: React.FC = () => {
           if (res.confirm) {
             setIsPatrolling(false);
             Taro.showToast({ title: '巡护已结束', icon: 'success' });
-            console.log('[Patrol] 结束巡护');
           }
         },
       });
     } else {
       Taro.switchTab({ url: '/pages/tasks/index' });
+    }
+  };
+
+  const goToTaskDetail = () => {
+    if (ongoingTask) {
+      Taro.navigateTo({ url: `/pages/task-detail/index?id=${ongoingTask.id}` });
     }
   };
 
@@ -102,6 +114,22 @@ const PatrolPage: React.FC = () => {
             <Text className={styles.statusText}>{isPatrolling ? '巡护中' : '未开始'}</Text>
           </View>
         </View>
+
+        {isPatrolling && ongoingTask && (
+          <View className={styles.ongoingTask} onClick={goToTaskDetail}>
+            <View className={styles.ongoingInfo}>
+              <Text className={styles.ongoingLabel}>当前路线</Text>
+              <Text className={styles.ongoingName}>{ongoingTask.name}</Text>
+              <Text className={styles.ongoingNext}>
+                下一打卡点：📍 {nextCheckpoint}
+              </Text>
+            </View>
+            <View className={styles.ongoingAction}>
+              <Text className={styles.ongoingActionText}>继续巡护 ›</Text>
+            </View>
+          </View>
+        )}
+
         <View className={styles.statsRow}>
           <View className={styles.statItem}>
             <Text className={styles.statValue}>{todayDistance.toFixed(1)}</Text>

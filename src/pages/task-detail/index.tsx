@@ -63,7 +63,7 @@ const TaskDetailPage: React.FC = () => {
   };
 
   const handleReport = () => {
-    Taro.switchTab({ url: '/pages/report/index' });
+    Taro.switchTab({ url: `/pages/report/index?taskId=${taskId}` });
   };
 
   if (!task) {

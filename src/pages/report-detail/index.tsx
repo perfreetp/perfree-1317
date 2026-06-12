@@ -9,14 +9,16 @@ import { ReportItem } from '@/types';
 const ReportDetailPage: React.FC = () => {
   const router = useRouter();
   const reportId = router.params.id || 'report001';
-  const { initReports, getReportById } = useReportStore();
+  const { initReports, getReportById, updateReportStatus } = useReportStore();
   const [report, setReport] = useState<ReportItem | undefined>();
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [processAction, setProcessAction] = useState<'processing' | 'completed'>('processing');
+  const [processRemark, setProcessRemark] = useState('');
 
   const loadReport = () => {
     initReports();
     const found = getReportById(reportId);
     setReport(found);
-    console.log('[ReportDetail] 加载上报', reportId, found);
   };
 
   useEffect(() => {
@@ -38,14 +40,26 @@ const ReportDetailPage: React.FC = () => {
     });
   };
 
-  const handleFollow = () => {
-    Taro.showToast({ title: '已关注此上报', icon: 'success' });
-  };
-
   const previewImage = (url: string) => {
     Taro.previewImage({
       urls: report?.images || [],
       current: url,
+    });
+  };
+
+  const openProcessModal = (action: 'processing' | 'completed') => {
+    setProcessAction(action);
+    setProcessRemark('');
+    setShowProcessModal(true);
+  };
+
+  const confirmProcess = () => {
+    updateReportStatus(reportId, processAction, processRemark || undefined);
+    setShowProcessModal(false);
+    loadReport();
+    Taro.showToast({
+      title: processAction === 'processing' ? '已推进为处理中' : '已标记为已解决',
+      icon: 'success',
     });
   };
 
@@ -57,10 +71,10 @@ const ReportDetailPage: React.FC = () => {
     );
   }
 
-  const statusMap: Record<string, { text: string; color: string; class: string }> = {
-    pending: { text: '待处理', color: '#ff7d00', class: 'pending' },
-    processing: { text: '处理中', color: '#165dff', class: 'processing' },
-    completed: { text: '已解决', color: '#00b42a', class: 'completed' },
+  const statusMap: Record<string, { text: string; class: string }> = {
+    pending: { text: '待处理', class: 'pending' },
+    processing: { text: '处理中', class: 'processing' },
+    completed: { text: '已解决', class: 'completed' },
   };
 
   const typeIconMap: Record<string, string> = {
@@ -73,7 +87,7 @@ const ReportDetailPage: React.FC = () => {
   const displayProgress = report.progress && report.progress.length > 0
     ? report.progress
     : [
-        { status: 'pending', statusText: '待处理', time: report.createTime, operator: '系统', remark: '已提交上报，等待值班室派单' },
+        { status: 'pending' as const, statusText: '待处理', time: report.createTime, operator: '系统', remark: '已提交上报，等待值班室派单' },
       ];
 
   return (
@@ -159,12 +173,7 @@ const ReportDetailPage: React.FC = () => {
         <View className={styles.timeline}>
           {displayProgress.map((node, index) => (
             <View key={index} className={styles.timelineItem}>
-              <View
-                className={classnames(
-                  styles.timelineDot,
-                  styles.done
-                )}
-              >
+              <View className={classnames(styles.timelineDot, styles.done)}>
                 <Text className={styles.dotCheck}>✓</Text>
               </View>
               <View className={styles.timelineContent}>
@@ -197,10 +206,64 @@ const ReportDetailPage: React.FC = () => {
         <View className={styles.secondaryBtn} onClick={handleCallDuty}>
           <Text>📞 联系值班室</Text>
         </View>
-        <View className={styles.primaryBtn} onClick={handleFollow}>
-          <Text>关注此上报</Text>
-        </View>
+        {report.status === 'pending' && (
+          <View className={styles.primaryBtn} onClick={() => openProcessModal('processing')}>
+            <Text>开始处理</Text>
+          </View>
+        )}
+        {report.status === 'processing' && (
+          <View className={styles.resolveBtn} onClick={() => openProcessModal('completed')}>
+            <Text>标记已解决</Text>
+          </View>
+        )}
+        {report.status === 'completed' && (
+          <View className={classnames(styles.primaryBtn, styles.disabledBtn)}>
+            <Text>已解决</Text>
+          </View>
+        )}
       </View>
+
+      {showProcessModal && (
+        <View className={styles.modalOverlay}>
+          <View className={styles.modalContent}>
+            <Text className={styles.modalTitle}>
+              {processAction === 'processing' ? '确认开始处理' : '确认标记已解决'}
+            </Text>
+
+            <View className={styles.modalField}>
+              <Text className={styles.modalLabel}>处理备注</Text>
+              <View className={styles.modalInputWrap}>
+                <Text
+                  className={classnames(styles.modalInput, !processRemark && styles.placeholder)}
+                  onClick={() => {
+                    Taro.showModal({
+                      title: '输入备注',
+                      editable: true,
+                      placeholderText: '请输入处理备注...',
+                      success: (res) => {
+                        if (res.confirm && res.content) {
+                          setProcessRemark(res.content);
+                        }
+                      },
+                    });
+                  }}
+                >
+                  {processRemark || '点击输入备注（可选）'}
+                </Text>
+              </View>
+            </View>
+
+            <View className={styles.modalActions}>
+              <View className={styles.modalCancel} onClick={() => setShowProcessModal(false)}>
+                <Text>取消</Text>
+              </View>
+              <View className={styles.modalConfirm} onClick={confirmProcess}>
+                <Text>确认</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 };

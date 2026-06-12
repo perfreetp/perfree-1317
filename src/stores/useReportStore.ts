@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { ReportItem, ReportProgressNode } from '@/types';
 import { reportList } from '@/data/reports';
 import { userInfo } from '@/data/stats';
+import { usePatrolRecordStore } from './usePatrolRecordStore';
 
 const generateId = () => {
   return 'report' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -73,7 +74,9 @@ interface ReportState {
   addReport: (report: Omit<ReportItem, 'id' | 'status' | 'createTime' | 'reporter' | 'progress'>) => ReportItem;
   getReportById: (id: string) => ReportItem | undefined;
   getReportsByType: (type: string) => ReportItem[];
+  getReportsByTaskId: (taskId: string) => ReportItem[];
   getMyReports: () => ReportItem[];
+  getUnresolvedCount: () => number;
   updateReportStatus: (id: string, status: 'pending' | 'processing' | 'completed', remark?: string) => void;
   addProgressNode: (id: string, node: ReportProgressNode) => void;
 }
@@ -109,6 +112,7 @@ export const useReportStore = create<ReportState>()(
           location: reportData.location,
           lat: reportData.lat,
           lng: reportData.lng,
+          taskId: reportData.taskId,
           status: 'pending',
           createTime,
           reporter: userInfo.name,
@@ -118,6 +122,15 @@ export const useReportStore = create<ReportState>()(
         set((state) => ({
           reports: [newReport, ...state.reports],
         }));
+
+        if (reportData.taskId) {
+          const recordStore = usePatrolRecordStore.getState();
+          recordStore.initRecords();
+          const record = recordStore.records.find((r) => r.taskId === reportData.taskId);
+          if (record) {
+            recordStore.linkReportToRecord(record.id, newReport.id);
+          }
+        }
 
         return newReport;
       },
@@ -131,8 +144,16 @@ export const useReportStore = create<ReportState>()(
         return get().reports.filter((r) => r.type === type);
       },
 
+      getReportsByTaskId: (taskId: string) => {
+        return get().reports.filter((r) => r.taskId === taskId);
+      },
+
       getMyReports: () => {
         return get().reports.filter((r) => r.reporter === userInfo.name);
+      },
+
+      getUnresolvedCount: () => {
+        return get().reports.filter((r) => r.status !== 'completed').length;
       },
 
       updateReportStatus: (id: string, status: 'pending' | 'processing' | 'completed', remark?: string) => {

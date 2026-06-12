@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useRouter } from '@tarojs/taro';
 import { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
 import { useReportStore } from '@/stores/useReportStore';
+import { useTaskStore } from '@/stores/useTaskStore';
+import { usePatrolRecordStore } from '@/stores/usePatrolRecordStore';
 
 type ReportType = 'poaching' | 'fire' | 'roadblock' | 'other';
 
@@ -16,7 +18,10 @@ const reportTypes = [
 ];
 
 const ReportPage: React.FC = () => {
+  const router = useRouter();
+  const linkedTaskId = router.params.taskId || '';
   const { initReports, addReport, reports } = useReportStore();
+  const { initTasks, getOngoingTask } = useTaskStore();
   const [type, setType] = useState<ReportType>('fire');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -31,7 +36,8 @@ const ReportPage: React.FC = () => {
 
   useEffect(() => {
     initReports();
-  }, [initReports]);
+    initTasks();
+  }, [initReports, initTasks]);
 
   useDidShow(() => {
     initReports();
@@ -166,6 +172,11 @@ const ReportPage: React.FC = () => {
               other: '其他隐患',
             };
 
+            const effectiveTaskId = linkedTaskId || (() => {
+              const ongoing = getOngoingTask();
+              return ongoing?.id || '';
+            })();
+
             const newReport = addReport({
               type,
               typeName: typeNameMap[type],
@@ -175,7 +186,24 @@ const ReportPage: React.FC = () => {
               location,
               lat,
               lng,
+              taskId: effectiveTaskId || undefined,
             });
+
+            if (effectiveTaskId) {
+              const recordStore = usePatrolRecordStore.getState();
+              recordStore.initRecords();
+              const record = recordStore.getRecordsByTaskId(effectiveTaskId);
+              if (record) {
+                recordStore.addTimelineEvent(record.id, {
+                  type: 'report',
+                  time: newReport.createTime,
+                  title: `上报隐患：${newReport.typeName}`,
+                  detail: newReport.description.slice(0, 30),
+                  icon: '⚠️',
+                  reportId: newReport.id,
+                });
+              }
+            }
 
             Taro.hideLoading();
             Taro.showToast({ title: '上报成功', icon: 'success' });
