@@ -1,0 +1,398 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-dark 30%, $color-bg-page 30%);
+  padding-bottom: 40rpx;
+}
+
+.header {
+  padding: $spacing-lg $page-padding 48rpx;
+  color: $color-text-white;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-xl;
+}
+
+.avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  font-size: 40rpx;
+}
+
+.userText {
+  flex: 1;
+}
+
+.userName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.userRole {
+  font-size: $font-size-sm;
+  opacity: 0.85;
+  display: block;
+}
+
+.statusCard {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  margin: 0 $page-padding $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.statusTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+}
+
+.statusDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  background: $color-success;
+  margin-right: $spacing-xs;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.statusText {
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.statsRow {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md 0;
+  background: $color-primary-bg;
+  border-radius: $radius-md;
+}
+
+.statValue {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.section {
+  margin: 0 $page-padding $spacing-lg;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionMore {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-normal;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.quickItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm 0;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.quickIcon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-sm;
+  font-size: 40rpx;
+}
+
+.quickText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.mapCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+}
+
+.mapHeader {
+  padding: $spacing-lg $spacing-lg $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mapTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.mapLegend {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.legendDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  margin-right: 8rpx;
+
+  &.boundary {
+    background: $color-primary;
+  }
+  &.checkpoint {
+    background: $color-warning;
+  }
+  &.me {
+    background: $color-error;
+  }
+}
+
+.mapArea {
+  height: 360rpx;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  position: relative;
+  margin: 0 $spacing-lg $spacing-lg;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.boundaryLine {
+  position: absolute;
+  top: 20%;
+  left: 15%;
+  right: 15%;
+  bottom: 20%;
+  border: 4rpx dashed $color-primary;
+  border-radius: 50% 30% 60% 40%;
+  opacity: 0.6;
+}
+
+.boundaryFill {
+  position: absolute;
+  top: 22%;
+  left: 17%;
+  right: 17%;
+  bottom: 22%;
+  background: rgba($color-primary, 0.15);
+  border-radius: 50% 30% 60% 40%;
+}
+
+.mapPoint {
+  position: absolute;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: $radius-round;
+  background: $color-warning;
+  border: 4rpx solid $color-bg-card;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+}
+
+.myPosition {
+  position: absolute;
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: $radius-round;
+  background: $color-error;
+  border: 6rpx solid $color-bg-card;
+  box-shadow: 0 0 0 8rpx rgba($color-error, 0.3);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: myPulse 2s infinite;
+}
+
+@keyframes myPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 8rpx rgba($color-error, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 16rpx rgba($color-error, 0.1);
+  }
+}
+
+.mapLabel {
+  position: absolute;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.noticeCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.noticeItem {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.noticeTag {
+  flex-shrink: 0;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  font-size: $font-size-xs;
+  margin-right: $spacing-md;
+  margin-top: 4rpx;
+
+  &.urgent {
+    background: $color-danger-bg;
+    color: $color-error;
+  }
+
+  &.normal {
+    background: $color-primary-bg;
+    color: $color-primary;
+  }
+}
+
+.noticeContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.noticeTitle {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  @include text-ellipsis;
+}
+
+.noticeTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.startBtn {
+  position: fixed;
+  bottom: 120rpx;
+  left: $page-padding;
+  right: $page-padding;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.3);
+  z-index: 100;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.startBtnText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+}

@@ -1,0 +1,249 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.section {
+  margin: $spacing-md $page-padding;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.storageCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.storageInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.storageIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-lg;
+  background: $color-primary-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  font-size: 40rpx;
+}
+
+.storageText {
+  flex: 1;
+}
+
+.storageTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.storageDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+}
+
+.storageBar {
+  height: 12rpx;
+  background: $color-bg-page;
+  border-radius: 6rpx;
+  overflow: hidden;
+  margin-bottom: $spacing-sm;
+}
+
+.storageFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 6rpx;
+  transition: width $transition-base;
+}
+
+.storageDetail {
+  display: flex;
+  justify-content: space-between;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.packageList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+}
+
+.packageItem {
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+  transition: all $transition-base;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.packageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.packageName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.packageSize {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.packageDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+}
+
+.packageProgress {
+  height: 8rpx;
+  background: $color-bg-page;
+  border-radius: 4rpx;
+  overflow: hidden;
+  margin-bottom: $spacing-sm;
+}
+
+.packageProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 4rpx;
+}
+
+.packageFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.packageStatus {
+  font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+}
+
+.statusDot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $radius-round;
+  margin-right: 8rpx;
+}
+
+.downloadBtn {
+  padding: 0 $spacing-lg;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &.primary {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+
+  &.outline {
+    background: transparent;
+    border: 2rpx solid $color-border;
+    color: $color-text-secondary;
+  }
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+  }
+}
+
+.syncSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.syncItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.syncInfo {
+  display: flex;
+  align-items: center;
+}
+
+.syncIcon {
+  font-size: 32rpx;
+  margin-right: $spacing-sm;
+}
+
+.syncText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.syncDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-left: 8rpx;
+}
+
+.syncAction {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.syncCount {
+  font-size: $font-size-sm;
+  color: $color-error;
+  font-weight: $font-weight-medium;
+  background: $color-danger-bg;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+}

@@ -1,0 +1,264 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 140rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  padding: $spacing-xl $page-padding 60rpx;
+  color: $color-text-white;
+}
+
+.taskName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.taskDesc {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  line-height: 1.6;
+  display: block;
+}
+
+.infoRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+.infoItem {
+  flex: 1;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  padding: $spacing-md 0;
+}
+
+.infoValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  display: block;
+  line-height: 1.2;
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  opacity: 0.9;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.section {
+  margin: -32rpx $page-padding $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  position: relative;
+  z-index: 1;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+}
+
+.sectionIcon {
+  font-size: 28rpx;
+  margin-right: $spacing-sm;
+}
+
+.mapArea {
+  height: 300rpx;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: $radius-md;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: $spacing-md;
+}
+
+.mapRoute {
+  position: absolute;
+  top: 20%;
+  left: 15%;
+  right: 15%;
+  bottom: 20%;
+  border: 4rpx solid $color-primary;
+  border-radius: 50% 30% 60% 40%;
+  opacity: 0.5;
+}
+
+.mapPoint {
+  position: absolute;
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: $radius-round;
+  background: $color-warning;
+  border: 4rpx solid $color-bg-card;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+
+  &.checked {
+    background: $color-success;
+  }
+
+  &.current {
+    width: 32rpx;
+    height: 32rpx;
+    background: $color-error;
+    box-shadow: 0 0 0 8rpx rgba($color-error, 0.3);
+    z-index: 3;
+    animation: pointPulse 2s infinite;
+  }
+}
+
+@keyframes pointPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 8rpx rgba($color-error, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 16rpx rgba($color-error, 0.1);
+  }
+}
+
+.checkpointList {
+  margin-top: $spacing-md;
+}
+
+.checkpointItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.cpIndex {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  background: $color-bg-page;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+
+  &.checked {
+    background: $color-primary-bg;
+    color: $color-primary;
+  }
+
+  &.current {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+.cpInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cpName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.cpTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.cpStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &.checked {
+    color: $color-success;
+  }
+
+  &.current {
+    color: $color-primary;
+  }
+
+  &.pending {
+    color: $color-text-tertiary;
+  }
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.primaryBtn {
+  flex: 1;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.disabled {
+    background: $color-bg-hover;
+    color: $color-text-disabled;
+  }
+}
+
+.secondaryBtn {
+  padding: 0 $spacing-xl;
+  height: $button-height-lg;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+}

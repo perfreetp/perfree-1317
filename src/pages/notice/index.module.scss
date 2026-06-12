@@ -1,0 +1,215 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: $color-bg-page;
+}
+
+.tabBar {
+  display: flex;
+  align-items: center;
+  background: $color-bg-card;
+  padding: 0 $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tabItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg 0;
+  position: relative;
+
+  &.active {
+    .tabText {
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-lg;
+    }
+  }
+}
+
+.tabText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  transition: all $transition-fast;
+}
+
+.tabBadge {
+  min-width: 32rpx;
+  height: 32rpx;
+  background: $color-error;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: $spacing-xs;
+  padding: 0 8rpx;
+}
+
+.tabBadgeText {
+  font-size: 20rpx;
+  color: $color-text-white;
+  line-height: 1;
+}
+
+.markReadBtn {
+  padding: $spacing-sm $spacing-md;
+}
+
+.markReadText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.listContainer {
+  flex: 1;
+  padding: $spacing-md;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.noticeItem {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-fast;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-card-hover;
+  }
+
+  &.unread {
+    background: linear-gradient(to right, $color-primary-bg 0%, $color-bg-card 20%);
+  }
+}
+
+.noticeLeft {
+  position: relative;
+  margin-right: $spacing-md;
+}
+
+.noticeIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.urgentIcon {
+  background: rgba($color-error, 0.1);
+}
+
+.normalIcon {
+  background: rgba($color-primary, 0.1);
+}
+
+.noticeIconText {
+  font-size: 40rpx;
+}
+
+.redDot {
+  position: absolute;
+  top: -4rpx;
+  right: -4rpx;
+  width: 16rpx;
+  height: 16rpx;
+  background: $color-error;
+  border-radius: 50%;
+  border: 2rpx solid $color-bg-card;
+}
+
+.noticeContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.noticeHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.noticeTitle {
+  flex: 1;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noticeTag {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  flex-shrink: 0;
+}
+
+.urgentTag {
+  background: rgba($color-error, 0.1);
+
+  .noticeTagText {
+    color: $color-error;
+  }
+}
+
+.normalTag {
+  background: rgba($color-primary, 0.1);
+
+  .noticeTagText {
+    color: $color-primary;
+  }
+}
+
+.noticeTagText {
+  font-size: $font-size-xs;
+}
+
+.noticeDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  @include text-ellipsis-multi(2);
+}
+
+.noticeTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
