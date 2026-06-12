@@ -21,7 +21,7 @@ const ReportPage: React.FC = () => {
   const router = useRouter();
   const linkedTaskId = router.params.taskId || '';
   const { initReports, addReport, reports } = useReportStore();
-  const { initTasks, getOngoingTask } = useTaskStore();
+  const { initTasks, getOngoingTask, getActiveTask } = useTaskStore();
   const [type, setType] = useState<ReportType>('fire');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -173,6 +173,8 @@ const ReportPage: React.FC = () => {
             };
 
             const effectiveTaskId = linkedTaskId || (() => {
+              const active = getActiveTask();
+              if (active && active.status === 'ongoing') return active.id;
               const ongoing = getOngoingTask();
               return ongoing?.id || '';
             })();

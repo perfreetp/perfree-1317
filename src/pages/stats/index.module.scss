@@ -94,6 +94,219 @@
   justify-content: space-between;
 }
 
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.dutyBoardBtn {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  background: rgba($color-primary, 0.08);
+  padding: 8rpx 20rpx;
+  border-radius: $radius-round;
+  font-weight: $font-weight-medium;
+}
+
+.todayStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.todayStatItem {
+  text-align: center;
+  padding: $spacing-sm 0;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.todayStatValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+  line-height: 1.2;
+}
+
+.todayStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.todayTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.todayTaskCard {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba($color-primary, 0.05);
+  }
+}
+
+.todayTaskHeader {
+  margin-bottom: $spacing-sm;
+}
+
+.todayTaskNameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6rpx;
+}
+
+.todayTaskName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  min-width: 0;
+}
+
+.todayTaskStatus {
+  flex-shrink: 0;
+  font-size: $font-size-xs;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  margin-left: $spacing-sm;
+
+  &.statusCompleted {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+  }
+
+  &.statusOngoing {
+    background: rgba($color-primary, 0.12);
+    color: $color-primary;
+  }
+}
+
+.todayTaskTimeRow {
+  display: flex;
+  align-items: center;
+}
+
+.todayTaskTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.todayTaskProgressRow {
+  margin-bottom: $spacing-sm;
+}
+
+.todayTaskProgressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.todayTaskProgressBar {
+  height: 10rpx;
+  background: rgba($color-text-tertiary, 0.1);
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.todayTaskProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.todayTaskProgressText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.todayTaskReports {
+  border-top: 2rpx solid rgba($color-text-tertiary, 0.08);
+  padding-top: $spacing-sm;
+}
+
+.todayTaskReportsLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.todayTaskReportList {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.todayTaskReportItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 16rpx;
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+  transition: all $transition-base;
+
+  &:active {
+    background: rgba($color-primary, 0.05);
+  }
+}
+
+.todayTaskReportType {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.reportStatusTag {
+  font-size: $font-size-xs;
+  padding: 4rpx 14rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+
+  &.reportStatusPending {
+    background: rgba($color-warning, 0.12);
+    color: $color-warning;
+  }
+
+  &.reportStatusProcessing {
+    background: rgba($color-info, 0.12);
+    color: $color-info;
+  }
+
+  &.reportStatusResolved {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+  }
+}
+
+.exportFilterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-bottom: $spacing-md;
+}
+
+.exportFilterTag {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.08);
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+}
+
 .monthGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

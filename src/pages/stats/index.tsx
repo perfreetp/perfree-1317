@@ -6,11 +6,27 @@ import styles from './index.module.scss';
 import { userInfo, monthlyStats } from '@/data/stats';
 import { usePatrolRecordStore } from '@/stores/usePatrolRecordStore';
 import { useReportStore } from '@/stores/useReportStore';
-import { PatrolRecord } from '@/types';
+import { useTaskStore } from '@/stores/useTaskStore';
+import { PatrolRecord, PatrolTask, ReportItem } from '@/types';
+
+interface TodayTaskSummary {
+  id: string;
+  taskId: string;
+  taskName: string;
+  startTime: string;
+  endTime: string;
+  distance: number;
+  totalCheckpoints: number;
+  checkedCount: number;
+  reports: ReportItem[];
+  status: 'ongoing' | 'completed';
+  recordId?: string;
+}
 
 const StatsPage: React.FC = () => {
-  const { initRecords, records, getRecordsByDateRange } = usePatrolRecordStore();
-  const { initReports, getUnresolvedCount } = useReportStore();
+  const { initRecords, records, getRecordsByDateRange, getTodayRecords } = usePatrolRecordStore();
+  const { initReports, getReportsByTaskId, filterReports } = useReportStore();
+  const { initTasks, tasks } = useTaskStore();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showExportPreview, setShowExportPreview] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -24,17 +40,23 @@ const StatsPage: React.FC = () => {
     totalCheckpoints: number;
     totalReports: number;
     unresolvedCount: number;
+    resolvedCount: number;
     range: string;
+    routeFilter: string;
+    typeFilter: string;
+    statusFilter: string;
   } | null>(null);
 
   useEffect(() => {
     initRecords();
     initReports();
-  }, [initRecords, initReports]);
+    initTasks();
+  }, [initRecords, initReports, initTasks]);
 
   useDidShow(() => {
     initRecords();
     initReports();
+    initTasks();
   });
 
   const formatDateStr = (date: Date) => {
@@ -43,6 +65,8 @@ const StatsPage: React.FC = () => {
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const getTodayStr = () => formatDateStr(new Date());
 
   const getDefaultDates = () => {
     const today = new Date();
@@ -53,6 +77,70 @@ const StatsPage: React.FC = () => {
       end: formatDateStr(today),
     };
   };
+
+  const todayTaskList = useMemo<TodayTaskSummary[]>(() => {
+    const today = getTodayStr();
+    const list: TodayTaskSummary[] = [];
+
+    const todayRecords = getTodayRecords();
+    todayRecords.forEach((rec) => {
+      const reports = rec.taskId ? getReportsByTaskId(rec.taskId) : [];
+      list.push({
+        id: `record-${rec.id}`,
+        taskId: rec.taskId || '',
+        taskName: rec.taskName || '巡护路线',
+        startTime: rec.startTime || '',
+        endTime: rec.endTime || '',
+        distance: rec.distance,
+        totalCheckpoints: rec.checkpoints,
+        checkedCount: rec.checkpoints,
+        reports,
+        status: 'completed',
+        recordId: rec.id,
+      });
+    });
+
+    tasks.forEach((task) => {
+      if (task.status !== 'ongoing') return;
+      if (!task.startTime || !task.startTime.startsWith(today)) return;
+      if (todayRecords.some((r) => r.taskId === task.id)) return;
+
+      const reports = getReportsByTaskId(task.id);
+      const checkedCount = task.checkpoints.filter((cp) => cp.checked).length;
+      list.push({
+        id: `task-${task.id}`,
+        taskId: task.id,
+        taskName: task.name,
+        startTime: task.startTime,
+        endTime: '',
+        distance: task.distance * (task.checkpoints.length > 0 ? checkedCount / task.checkpoints.length : 0),
+        totalCheckpoints: task.checkpoints.length,
+        checkedCount,
+        reports,
+        status: 'ongoing',
+      });
+    });
+
+    list.sort((a, b) => {
+      const tA = a.startTime ? new Date(a.startTime).getTime() : 0;
+      const tB = b.startTime ? new Date(b.startTime).getTime() : 0;
+      return tA - tB;
+    });
+
+    return list;
+  }, [tasks, records, getTodayRecords, getReportsByTaskId]);
+
+  const todaySummaryStats = useMemo(() => {
+    const totalRoutes = todayTaskList.length;
+    const completedRoutes = todayTaskList.filter((t) => t.status === 'completed').length;
+    const totalReports = todayTaskList.reduce((sum, t) => sum + t.reports.length, 0);
+    const unresolved = todayTaskList.reduce((sum, t) => {
+      return sum + t.reports.filter((r) => r.status !== 'completed').length;
+    }, 0);
+    const totalCheckpoints = todayTaskList.reduce((sum, t) => sum + t.checkedCount, 0);
+    const totalDistance = todayTaskList.reduce((sum, t) => sum + t.distance, 0);
+    return { totalRoutes, completedRoutes, totalReports, unresolved, totalCheckpoints, totalDistance };
+  }, [todayTaskList]);
 
   const handleExport = () => {
     Taro.showActionSheet({
@@ -77,7 +165,7 @@ const StatsPage: React.FC = () => {
             end = defaults.end;
           }
 
-          prepareExportPreview(start, end);
+          prepareExportPreview(start, end, '', '', '');
         }
       },
     });
@@ -137,7 +225,7 @@ const StatsPage: React.FC = () => {
       Taro.showToast({ title: '暂无路线数据', icon: 'none' });
       return;
     }
-    const items = ['全部路线', ...routeNames as string[]];
+    const items = ['全部路线', ...(routeNames as string[])];
     Taro.showActionSheet({
       itemList: items,
       success: (res) => {
@@ -170,7 +258,7 @@ const StatsPage: React.FC = () => {
     setShowDatePicker(false);
   };
 
-  const prepareExportPreview = (start: string, end: string) => {
+  const prepareExportPreview = (start: string, end: string, route: string, type: string, status: string) => {
     if (!start || !end) {
       Taro.showToast({ title: '请选择完整日期范围', icon: 'none' });
       return;
@@ -184,24 +272,35 @@ const StatsPage: React.FC = () => {
     initRecords();
     let filteredRecords = getRecordsByDateRange(start, end);
 
-    if (filterRoute) {
-      filteredRecords = filteredRecords.filter((r) => r.taskName === filterRoute);
+    if (route) {
+      filteredRecords = filteredRecords.filter((r) => r.taskName === route);
     }
+
+    const taskIdsInRange = filteredRecords.map((r) => r.taskId).filter(Boolean) as string[];
+
+    const filteredReports = filterReports({
+      typeName: type || undefined,
+      status: status || undefined,
+      taskIds: taskIdsInRange.length > 0 ? taskIdsInRange : undefined,
+      dateRange: { start, end },
+    });
 
     const totalDistance = filteredRecords.reduce((sum, r) => sum + r.distance, 0);
     const totalCheckpoints = filteredRecords.reduce((sum, r) => sum + r.checkpoints, 0);
-    const totalReports = filteredRecords.reduce((sum, r) => sum + (r.reports || 0), 0);
-
-    initReports();
-    const unresolvedCount = getUnresolvedCount();
+    const unresolvedCount = filteredReports.filter((r) => r.status !== 'completed').length;
+    const resolvedCount = filteredReports.filter((r) => r.status === 'completed').length;
 
     setExportData({
       records: filteredRecords,
       totalDistance: Math.round(totalDistance * 10) / 10,
       totalCheckpoints,
-      totalReports,
+      totalReports: filteredReports.length,
       unresolvedCount,
+      resolvedCount,
       range: `${start} 至 ${end}`,
+      routeFilter: route,
+      typeFilter: type,
+      statusFilter: status,
     });
 
     setShowDatePicker(false);
@@ -209,7 +308,7 @@ const StatsPage: React.FC = () => {
   };
 
   const confirmDateRange = () => {
-    prepareExportPreview(startDate, endDate);
+    prepareExportPreview(startDate, endDate, filterRoute, filterType, filterStatus);
   };
 
   const doExport = () => {
@@ -238,9 +337,34 @@ const StatsPage: React.FC = () => {
     Taro.navigateTo({ url: `/pages/record-detail/index?id=${recordId}` });
   };
 
+  const handleTodayTaskClick = (item: TodayTaskSummary) => {
+    if (item.status === 'completed' && item.recordId) {
+      Taro.navigateTo({ url: `/pages/record-detail/index?id=${item.recordId}` });
+    } else {
+      Taro.navigateTo({ url: `/pages/task-detail/index?id=${item.taskId}` });
+    }
+  };
+
+  const handleReportClick = (reportId: string) => {
+    Taro.navigateTo({ url: `/pages/report-detail/index?id=${reportId}` });
+  };
+
+  const handleDutyBoardClick = () => {
+    Taro.navigateTo({ url: '/pages/duty-board/index' });
+  };
+
   const sortedRecords = useMemo(() => {
     return [...records].sort((a, b) => (a.date < b.date ? 1 : -1));
   }, [records]);
+
+  const getStatusInfo = (status: ReportItem['status']) => {
+    const map = {
+      pending: { label: '待处理', cls: styles.reportStatusPending },
+      processing: { label: '处理中', cls: styles.reportStatusProcessing },
+      completed: { label: '已解决', cls: styles.reportStatusResolved },
+    };
+    return map[status] || map.pending;
+  };
 
   return (
     <ScrollView scrollY className={styles.page}>
@@ -266,6 +390,112 @@ const StatsPage: React.FC = () => {
             <Text className={styles.statLabel}>本月劝返</Text>
           </View>
         </View>
+      </View>
+
+      <View className={styles.section}>
+        <View className={styles.sectionTitleRow}>
+          <Text className={styles.sectionTitle}>今日总览</Text>
+          <View className={styles.dutyBoardBtn} onClick={handleDutyBoardClick}>
+            <Text>值班室看板</Text>
+          </View>
+        </View>
+        <View className={styles.todayStatsGrid}>
+          <View className={styles.todayStatItem}>
+            <Text className={styles.todayStatValue}>{todaySummaryStats.totalRoutes}</Text>
+            <Text className={styles.todayStatLabel}>巡护路线</Text>
+          </View>
+          <View className={styles.todayStatItem}>
+            <Text className={styles.todayStatValue}>{todaySummaryStats.completedRoutes}</Text>
+            <Text className={styles.todayStatLabel}>已完成</Text>
+          </View>
+          <View className={styles.todayStatItem}>
+            <Text className={styles.todayStatValue}>{todaySummaryStats.totalDistance.toFixed(1)}</Text>
+            <Text className={styles.todayStatLabel}>里程(公里)</Text>
+          </View>
+          <View className={styles.todayStatItem}>
+            <Text className={styles.todayStatValue}>{todaySummaryStats.totalReports}</Text>
+            <Text className={styles.todayStatLabel}>隐患上报</Text>
+          </View>
+          <View className={styles.todayStatItem}>
+            <Text className={styles.todayStatValue}>{todaySummaryStats.unresolved}</Text>
+            <Text className={styles.todayStatLabel}>未解决</Text>
+          </View>
+          <View className={styles.todayStatItem}>
+            <Text className={styles.todayStatValue}>{todaySummaryStats.totalCheckpoints}</Text>
+            <Text className={styles.todayStatLabel}>打卡总数</Text>
+          </View>
+        </View>
+
+        {todayTaskList.length === 0 ? (
+          <View className={styles.emptyState}>
+            <Text className={styles.emptyIcon}>📋</Text>
+            <Text className={styles.emptyText}>今日暂无巡护记录</Text>
+          </View>
+        ) : (
+          <View className={styles.todayTimeline}>
+            {todayTaskList.map((item) => (
+              <View key={item.id} className={styles.todayTaskCard} onClick={() => handleTodayTaskClick(item)}>
+                <View className={styles.todayTaskHeader}>
+                  <View className={styles.todayTaskNameRow}>
+                    <Text className={styles.todayTaskName}>{item.taskName}</Text>
+                    <View className={`${styles.todayTaskStatus} ${item.status === 'completed' ? styles.statusCompleted : styles.statusOngoing}`}>
+                      <Text>{item.status === 'completed' ? '已完成' : '巡护中'}</Text>
+                    </View>
+                  </View>
+                  <View className={styles.todayTaskTimeRow}>
+                    <Text className={styles.todayTaskTime}>
+                      {item.startTime ? item.startTime.split(' ')[1] || item.startTime : '--:--'}
+                      {' → '}
+                      {item.endTime ? item.endTime.split(' ')[1] || item.endTime : '进行中'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className={styles.todayTaskProgressRow}>
+                  <View className={styles.todayTaskProgressWrap}>
+                    <View className={styles.todayTaskProgressBar}>
+                      <View
+                        className={styles.todayTaskProgressFill}
+                        style={{
+                          width: `${item.totalCheckpoints > 0 ? (item.checkedCount / item.totalCheckpoints) * 100 : 0}%`,
+                        }}
+                      ></View>
+                    </View>
+                    <Text className={styles.todayTaskProgressText}>
+                      打卡 {item.checkedCount}/{item.totalCheckpoints} · {item.distance.toFixed(1)}公里
+                    </Text>
+                  </View>
+                </View>
+
+                {item.reports.length > 0 && (
+                  <View className={styles.todayTaskReports}>
+                    <Text className={styles.todayTaskReportsLabel}>关联隐患（{item.reports.length}）</Text>
+                    <View className={styles.todayTaskReportList}>
+                      {item.reports.map((rep) => {
+                        const statusInfo = getStatusInfo(rep.status);
+                        return (
+                          <View
+                            key={rep.id}
+                            className={styles.todayTaskReportItem}
+                            onClick={(e) => {
+                              e.stopPropagation && e.stopPropagation();
+                              handleReportClick(rep.id);
+                            }}
+                          >
+                            <Text className={styles.todayTaskReportType}>{rep.typeName}</Text>
+                            <View className={`${styles.reportStatusTag} ${statusInfo.cls}`}>
+                              <Text>{statusInfo.label}</Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       <View className={styles.section}>
@@ -300,7 +530,7 @@ const StatsPage: React.FC = () => {
 
       <View className={styles.recordSection}>
         <View className={styles.recordHeader}>
-          <Text className={styles.recordTitle}>巡护记录</Text>
+          <Text className={styles.recordTitle}>历史巡护记录</Text>
           <View className={styles.exportBtn} onClick={handleExport}>
             <Text className={styles.exportIcon}>📤</Text>
             <Text>导出记录</Text>
@@ -433,6 +663,14 @@ const StatsPage: React.FC = () => {
 
             <Text className={styles.exportRangeText}>日期范围：{exportData.range}</Text>
 
+            {(exportData.routeFilter || exportData.typeFilter || exportData.statusFilter) && (
+              <View className={styles.exportFilterRow}>
+                {exportData.routeFilter && <Text className={styles.exportFilterTag}>路线：{exportData.routeFilter}</Text>}
+                {exportData.typeFilter && <Text className={styles.exportFilterTag}>类型：{exportData.typeFilter}</Text>}
+                {exportData.statusFilter && <Text className={styles.exportFilterTag}>状态：{exportData.statusFilter}</Text>}
+              </View>
+            )}
+
             <View className={styles.exportPreviewGrid}>
               <View className={styles.exportPreviewItem}>
                 <Text className={styles.exportPreviewValue}>{exportData.records.length}</Text>
@@ -458,9 +696,7 @@ const StatsPage: React.FC = () => {
                 <Text className={styles.exportPreviewLabel}>未解决</Text>
               </View>
               <View className={styles.exportPreviewItem}>
-                <Text className={styles.exportPreviewValue}>
-                  {exportData.totalReports - exportData.unresolvedCount}
-                </Text>
+                <Text className={styles.exportPreviewValue}>{exportData.resolvedCount}</Text>
                 <Text className={styles.exportPreviewLabel}>已解决</Text>
               </View>
             </View>

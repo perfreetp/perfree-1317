@@ -23,11 +23,13 @@ interface TaskState {
   acceptTask: (taskId: string) => void;
   checkIn: (taskId: string, checkpointId: string) => void;
   completeTask: (taskId: string) => void;
+  setActiveTaskId: (taskId: string | null) => void;
   getTaskById: (taskId: string) => PatrolTask | undefined;
   getCheckedCount: (taskId: string) => number;
   getTodayCheckedCount: () => number;
   getTodayDistance: () => number;
   getOngoingTask: () => PatrolTask | undefined;
+  getActiveTask: () => PatrolTask | undefined;
 }
 
 export const useTaskStore = create<TaskState>()(
@@ -98,6 +100,10 @@ export const useTaskStore = create<TaskState>()(
         });
       },
 
+      setActiveTaskId: (taskId: string | null) => {
+        set({ activeTaskId: taskId });
+      },
+
       completeTask: (taskId: string) => {
         const now = new Date().toLocaleString();
         set((state) => {
@@ -164,7 +170,18 @@ export const useTaskStore = create<TaskState>()(
       },
 
       getOngoingTask: () => {
-        return get().tasks.find((t) => t.status === 'ongoing');
+        const { activeTaskId, tasks } = get();
+        if (activeTaskId) {
+          const active = tasks.find((t) => t.id === activeTaskId && t.status === 'ongoing');
+          if (active) return active;
+        }
+        return tasks.find((t) => t.status === 'ongoing');
+      },
+
+      getActiveTask: () => {
+        const { activeTaskId, tasks } = get();
+        if (!activeTaskId) return undefined;
+        return tasks.find((t) => t.id === activeTaskId);
       },
     }),
     {

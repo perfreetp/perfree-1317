@@ -10,13 +10,16 @@ import { PatrolTask } from '@/types';
 const TaskDetailPage: React.FC = () => {
   const router = useRouter();
   const taskId = router.params.id || 'task002';
-  const { tasks, initTasks, acceptTask, checkIn, getTaskById } = useTaskStore();
+  const { tasks, initTasks, acceptTask, checkIn, getTaskById, setActiveTaskId } = useTaskStore();
   const [task, setTask] = useState<PatrolTask | undefined>();
 
   const loadTask = () => {
     initTasks();
     const found = getTaskById(taskId);
     setTask(found);
+    if (found) {
+      setActiveTaskId(taskId);
+    }
     console.log('[TaskDetail] 加载任务', taskId, found?.status);
   };
 

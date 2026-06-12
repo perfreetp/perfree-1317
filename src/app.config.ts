@@ -11,6 +11,7 @@ export default defineAppConfig({
     'pages/report-detail/index',
     'pages/notice/index',
     'pages/record-detail/index',
+    'pages/duty-board/index',
   ],
   window: {
     backgroundTextStyle: 'light',

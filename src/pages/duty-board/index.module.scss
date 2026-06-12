@@ -1,0 +1,411 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+  color: $color-text-white;
+}
+
+.title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  opacity: 0.85;
+  display: block;
+}
+
+.summaryRow {
+  display: flex;
+  gap: $spacing-sm;
+  margin: -40rpx $page-padding $spacing-md;
+  position: relative;
+  z-index: 2;
+}
+
+.summaryItem {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-sm;
+  text-align: center;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.summaryIcon {
+  font-size: 40rpx;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.summaryCount {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  display: block;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+}
+
+.tabBar {
+  display: flex;
+  background: $color-bg-card;
+  margin: 0 $page-padding $spacing-sm;
+  border-radius: $radius-md;
+  padding: 6rpx;
+  box-shadow: $shadow-card;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  padding: $spacing-sm 0;
+  border-radius: $radius-sm;
+  transition: all $transition-base;
+
+  &.activeTab {
+    background: rgba($color-primary, 0.08);
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.tabCount {
+  font-size: $font-size-xs;
+  background: rgba($color-text-tertiary, 0.1);
+  padding: 2rpx 10rpx;
+  border-radius: $radius-round;
+  color: $color-text-tertiary;
+}
+
+.listArea {
+  flex: 1;
+  padding: 0 $page-padding;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.reportList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding-bottom: $spacing-lg;
+}
+
+.reportCard {
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.reportHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.reportTypeRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+}
+
+.reportType {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  font-size: $font-size-xs;
+  padding: 4rpx 14rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+
+  &.status-pending {
+    background: rgba($color-warning, 0.12);
+    color: $color-warning;
+  }
+
+  &.status-processing {
+    background: rgba($color-info, 0.12);
+    color: $color-info;
+  }
+
+  &.status-completed {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+  }
+}
+
+.reportTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.reportDesc {
+  margin-bottom: $spacing-sm;
+}
+
+.reportDescText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.reportMetaRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  flex-shrink: 0;
+}
+
+.metaIcon {
+  font-size: 24rpx;
+}
+
+.metaText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.remarkRow {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-sm;
+  background: $color-primary-bg;
+  border-radius: $radius-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.remarkLabel {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.remarkText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.actionRow {
+  display: flex;
+  gap: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 2rpx solid rgba($color-text-tertiary, 0.08);
+}
+
+.viewDetailBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 0;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    background: rgba($color-text-tertiary, 0.15);
+  }
+}
+
+.quickBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 0;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &.processBtn {
+    background: linear-gradient(135deg, $color-info 0%, rgba($color-info, 0.8) 100%);
+  }
+
+  &.resolveBtn {
+    background: linear-gradient(135deg, $color-success 0%, rgba($color-success, 0.8) 100%);
+  }
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+.doneBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 0;
+  border-radius: $radius-button;
+  background: rgba($color-success, 0.1);
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: $page-padding * 2;
+}
+
+.modalContent {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-popup;
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  text-align: center;
+  display: block;
+  margin-bottom: $spacing-lg;
+}
+
+.modalField {
+  margin-bottom: $spacing-lg;
+}
+
+.modalLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.modalInputWrap {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  min-height: 80rpx;
+}
+
+.modalInput {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: 1.4;
+}
+
+.modalActions {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.modalCancel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    background: rgba($color-text-tertiary, 0.15);
+  }
+}
+
+.modalConfirm {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  font-size: $font-size-md;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}

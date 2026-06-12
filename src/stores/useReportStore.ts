@@ -77,6 +77,7 @@ interface ReportState {
   getReportsByTaskId: (taskId: string) => ReportItem[];
   getMyReports: () => ReportItem[];
   getUnresolvedCount: () => number;
+  filterReports: (options: { typeName?: string; status?: string; taskIds?: string[]; dateRange?: { start: string; end: string } }) => ReportItem[];
   updateReportStatus: (id: string, status: 'pending' | 'processing' | 'completed', remark?: string) => void;
   addProgressNode: (id: string, node: ReportProgressNode) => void;
 }
@@ -154,6 +155,28 @@ export const useReportStore = create<ReportState>()(
 
       getUnresolvedCount: () => {
         return get().reports.filter((r) => r.status !== 'completed').length;
+      },
+
+      filterReports: ({ typeName, status, taskIds, dateRange }) => {
+        const statusMap: Record<string, 'pending' | 'processing' | 'completed'> = {
+          '待处理': 'pending',
+          '处理中': 'processing',
+          '已解决': 'completed',
+        };
+        const targetStatus = status ? statusMap[status] : undefined;
+
+        return get().reports.filter((r) => {
+          if (typeName && r.typeName !== typeName) return false;
+          if (targetStatus && r.status !== targetStatus) return false;
+          if (taskIds && taskIds.length > 0) {
+            if (!r.taskId || !taskIds.includes(r.taskId)) return false;
+          }
+          if (dateRange) {
+            const dateStr = r.createTime.split(' ')[0];
+            if (dateStr < dateRange.start || dateStr > dateRange.end) return false;
+          }
+          return true;
+        });
       },
 
       updateReportStatus: (id: string, status: 'pending' | 'processing' | 'completed', remark?: string) => {
